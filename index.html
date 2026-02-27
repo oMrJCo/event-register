@@ -44,7 +44,6 @@
   <h3>4) โอนมัดจำ 1,000 บาท</h3>
   <p class="muted">สแกน QR เพื่อโอนเงิน แล้วกดไปแนบสลิป</p>
 
-  <!-- ✅ เปลี่ยนชื่อไฟล์ให้ตรงกับรูปจริงที่จะอัปโหลดเข้า repo -->
   <img src="qr-card.png" alt="QR Card" style="width:100%;max-width:420px;border-radius:14px;border:1px solid #eee" />
 
   <div style="margin-top:12px">
@@ -72,6 +71,31 @@ const TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
 
 function $(id){ return document.getElementById(id); }
 
+// ✅ Step 1 -> Step 2
+$("btnConfirm").onclick = function(){
+  $("msg1").textContent = "";
+
+  const fullname = $("fullname").value.trim();
+  const phone = $("phone").value.trim();
+  const facebook = $("facebook").value.trim();
+  const lineId = $("lineId").value.trim();
+
+  if(!fullname || !phone || !facebook || !lineId){
+    $("msg1").textContent = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
+    return;
+  }
+
+  $("step2").classList.remove("hidden");
+  $("step2").scrollIntoView({behavior:"smooth"});
+};
+
+// ✅ Step 2 -> Step 3
+$("btnNextUpload").onclick = function(){
+  $("step3").classList.remove("hidden");
+  $("step3").scrollIntoView({behavior:"smooth"});
+};
+
+// ✅ Submit (upload slip + save to Drive + save row to Sheet)
 $("btnSubmit").onclick = async function(){
   const btn = $("btnSubmit");
   const msg = $("msg3");
@@ -85,14 +109,23 @@ $("btnSubmit").onclick = async function(){
     return;
   }
 
+  // จำกัดขนาดไฟล์ฝั่งเว็บ (ให้ตรงกับ Apps Script)
+  const MAX = 5 * 1024 * 1024;
+  if(file.size > MAX){
+    msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่";
+    msg.className = "error";
+    return;
+  }
+
   // กันกดซ้ำ
   btn.disabled = true;
   btn.style.opacity = "0.6";
   msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารอสักครู่";
 
   const reader = new FileReader();
+
   reader.onload = function(){
-    const base64 = reader.result.split(",")[1];
+    const base64 = String(reader.result).split(",")[1];
 
     const form = document.createElement("form");
     form.method = "POST";
@@ -101,13 +134,13 @@ $("btnSubmit").onclick = async function(){
 
     const fields = {
       token: TOKEN,
-      fullname: $("fullname").value,
-      phone: $("phone").value,
-      facebook: $("facebook").value,
-      lineId: $("lineId").value,
+      fullname: $("fullname").value.trim(),
+      phone: $("phone").value.trim(),
+      facebook: $("facebook").value.trim(),
+      lineId: $("lineId").value.trim(),
       deposit: 1000,
       fileName: file.name,
-      mimeType: file.type,
+      mimeType: file.type || "application/octet-stream",
       fileDataBase64: base64
     };
 
@@ -115,7 +148,7 @@ $("btnSubmit").onclick = async function(){
       const input = document.createElement("input");
       input.type = "hidden";
       input.name = key;
-      input.value = fields[key];
+      input.value = String(fields[key]);
       form.appendChild(input);
     }
 
@@ -123,13 +156,13 @@ $("btnSubmit").onclick = async function(){
     form.submit();
     document.body.removeChild(form);
 
-    // ✅ แสดงผลแบบใช้งานจริง (รอให้สคริปต์ทำงาน)
+    // แสดงผลให้ผู้ใช้ (ไม่ติด CORS)
     setTimeout(() => {
       msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ (ภายใน 24 ชม.)";
       msg.className = "ok";
       btn.disabled = false;
       btn.style.opacity = "1";
-    }, 5000);
+    }, 4000);
   };
 
   reader.onerror = function(){
