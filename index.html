@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ลงทะเบียนร่วมงาน (มัดจำ 1,000 บาท)</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;margin:24px;max-width:720px}
+    .card{border:1px solid #ddd;border-radius:14px;padding:16px;margin:12px 0}
+    label{display:block;margin:10px 0 6px}
+    input{width:100%;padding:12px;border:1px solid #ccc;border-radius:10px}
+    button{padding:12px 16px;border:0;border-radius:12px;cursor:pointer}
+    .muted{color:#666;font-size:14px}
+    .hidden{display:none}
+    .error{color:#b00020}
+    .ok{color:#0b6b0b}
+  </style>
+</head>
+<body>
+
+<h2>ลงทะเบียนร่วมงาน (มัดจำ 1,000 บาท)</h2>
+<p class="muted">กรอกข้อมูล → ยืนยัน → แสดง QR → แนบสลิป → ส่งข้อมูล</p>
+
+<div class="card" id="step1">
+  <h3>2) กรอกข้อมูลลงทะเบียน</h3>
+
+  <label>ชื่อ-สกุล *</label>
+  <input id="fullname" placeholder="เช่น สมชาย ใจดี" />
+
+  <label>เบอร์โทร *</label>
+  <input id="phone" inputmode="numeric" placeholder="เช่น 0999999999" />
+
+  <label>ชื่อ Facebook *</label>
+  <input id="facebook" placeholder="เช่น Somchai Jaidee" />
+
+  <label>ID Line *</label>
+  <input id="lineId" placeholder="เช่น somchai123" />
+
+  <button id="btnConfirm">3) กดยืนยัน</button>
+  <p id="msg1" class="error"></p>
+</div>
+
+<div class="card hidden" id="step2">
+  <h3>4) โอนมัดจำ 1,000 บาท</h3>
+  <p class="muted">สแกน QR เพื่อโอนเงิน แล้วกดไปแนบสลิป</p>
+
+  <!-- ✅ เปลี่ยนชื่อไฟล์ให้ตรงกับรูปจริงที่จะอัปโหลดเข้า repo -->
+  <img src="qr-card.png" alt="QR Card" style="width:100%;max-width:420px;border-radius:14px;border:1px solid #eee" />
+
+  <div style="margin-top:12px">
+    <button id="btnNextUpload">ไปแนบสลิป</button>
+  </div>
+</div>
+
+<div class="card hidden" id="step3">
+  <h3>5) แนบสลิป</h3>
+  <p class="muted">รองรับ JPG / PNG / PDF (ไม่เกิน 5MB)</p>
+
+  <label>ไฟล์สลิป *</label>
+  <input id="slip" type="file" accept="image/*,application/pdf" />
+
+  <div style="margin-top:12px">
+    <button id="btnSubmit">ส่งข้อมูล + สลิป</button>
+  </div>
+
+  <p id="msg3"></p>
+</div>
+
+<script>
+  // ✅ ใส่ URL ที่พี่ส่งมาให้แล้ว
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxwiqjnUEbAIl9Cc_B0P6GiEc-cuiUKiGXIG8SFvJKu2TKYDBag9pPcyw7SotUXUbpb/exec";
+
+  // ⚠️ ใส่ให้ตรงกับ SHARED_TOKEN ใน Apps Script ของพี่
+  const TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
+
+  const $ = (id) => document.getElementById(id);
+
+  $("btnConfirm").addEventListener("click", () => {
+    $("msg1").textContent = "";
+
+    const fullname = $("fullname").value.trim();
+    const phone = $("phone").value.trim();
+    const facebook = $("facebook").value.trim();
+    const lineId = $("lineId").value.trim();
+
+    if (!fullname || !phone || !facebook || !lineId) {
+      $("msg1").textContent = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
+      return;
+    }
+
+    $("step2").classList.remove("hidden");
+    $("step2").scrollIntoView({behavior:"smooth"});
+  });
+
+  $("btnNextUpload").addEventListener("click", () => {
+    $("step3").classList.remove("hidden");
+    $("step3").scrollIntoView({behavior:"smooth"});
+  });
+
+  $("btnSubmit").addEventListener("click", async () => {
+    const msg = $("msg3");
+    msg.className = "";
+    msg.textContent = "";
+
+    const file = $("slip").files && $("slip").files[0];
+    if (!file) {
+      msg.className = "error";
+      msg.textContent = "กรุณาแนบไฟล์สลิป";
+      return;
+    }
+
+    const MAX = 5 * 1024 * 1024;
+    if (file.size > MAX) {
+      msg.className = "error";
+      msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่";
+      return;
+    }
+
+    msg.textContent = "กำลังอัปโหลด...";
+
+    try {
+      const base64 = await fileToBase64(file);
+
+      const payload = {
+        token: TOKEN,
+        fullname: $("fullname").value.trim(),
+        phone: $("phone").value.trim(),
+        facebook: $("facebook").value.trim(),
+        lineId: $("lineId").value.trim(),
+        deposit: 1000,
+        fileName: file.name,
+        mimeType: file.type || "application/octet-stream",
+        fileDataBase64: base64,
+      };
+
+      const res = await fetch(WEB_APP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error || "Submit failed");
+
+      msg.className = "ok";
+      msg.textContent = "✅ ส่งข้อมูลสำเร็จ! รอตรวจสอบการชำระเงิน";
+    } catch (e) {
+      msg.className = "error";
+      msg.textContent = "ส่งไม่สำเร็จ: " + (e.message || e);
+    }
+  });
+
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const s = String(reader.result);
+        resolve(s.split(",")[1]); // เอาเฉพาะ base64
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+</script>
+
+</body>
+</html>
