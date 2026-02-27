@@ -67,106 +67,71 @@
 </div>
 
 <script>
-  // ✅ ใส่ URL ที่พี่ส่งมาให้แล้ว
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGNTBkJZTVMLVP8qNZsEJ9qeHwf7zEybIeI2h1jTybvynHKAMjijaF6n5GkHI1oV3j/exec";
+const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGNTBkJZTVMLVP8qNZsEJ9qeHwf7zEybIeI2h1jTybvynHKAMjijaF6n5GkHI1oV3j/exec";
+const TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
 
-  // ⚠️ ใส่ให้ตรงกับ SHARED_TOKEN ใน Apps Script ของพี่
-  const TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
+function $(id){ return document.getElementById(id); }
 
-  const $ = (id) => document.getElementById(id);
-
-  $("btnConfirm").addEventListener("click", () => {
-    $("msg1").textContent = "";
-
-    const fullname = $("fullname").value.trim();
-    const phone = $("phone").value.trim();
-    const facebook = $("facebook").value.trim();
-    const lineId = $("lineId").value.trim();
-
-    if (!fullname || !phone || !facebook || !lineId) {
-      $("msg1").textContent = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
-      return;
-    }
-
-    $("step2").classList.remove("hidden");
-    $("step2").scrollIntoView({behavior:"smooth"});
-  });
-
-  $("btnNextUpload").addEventListener("click", () => {
-    $("step3").classList.remove("hidden");
-    $("step3").scrollIntoView({behavior:"smooth"});
-  });
-
-  $("btnSubmit").addEventListener("click", async () => {
-    const msg = $("msg3");
-    msg.className = "";
-    msg.textContent = "";
-
-    const file = $("slip").files && $("slip").files[0];
-    if (!file) {
-      msg.className = "error";
-      msg.textContent = "กรุณาแนบไฟล์สลิป";
-      return;
-    }
-
-    const MAX = 5 * 1024 * 1024;
-    if (file.size > MAX) {
-      msg.className = "error";
-      msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่";
-      return;
-    }
-
-    msg.textContent = "กำลังอัปโหลด...";
-
-    try {
-      const base64 = await fileToBase64(file);
-
-      const payload = {
-        token: TOKEN,
-        fullname: $("fullname").value.trim(),
-        phone: $("phone").value.trim(),
-        facebook: $("facebook").value.trim(),
-        lineId: $("lineId").value.trim(),
-        deposit: 1000,
-        fileName: file.name,
-        mimeType: file.type || "application/octet-stream",
-        fileDataBase64: base64,
-      };
-
-      const formData = new URLSearchParams();
-
-      for (const key in payload) {
-        formData.append(key, payload[key]);
-      }
-
-      const res = await fetch(WEB_APP_URL, {
-        method: "POST",
-        body: formData
-      });
-
-      const json = await res.json();
-      if (!json.ok) throw new Error(json.error || "Submit failed");
-
-      msg.className = "ok";
-      msg.textContent = "✅ ส่งข้อมูลสำเร็จ! รอตรวจสอบการชำระเงิน";
-    } catch (e) {
-      msg.className = "error";
-      msg.textContent = "ส่งไม่สำเร็จ: " + (e.message || e);
-    }
-  });
-
-  function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const s = String(reader.result);
-        resolve(s.split(",")[1]); // เอาเฉพาะ base64
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
+$("btnConfirm").onclick = function(){
+  if(!$("fullname").value || !$("phone").value || !$("facebook").value || !$("lineId").value){
+    $("msg1").textContent = "กรุณากรอกข้อมูลให้ครบ";
+    return;
   }
+  $("step2").classList.remove("hidden");
+};
+
+$("btnNextUpload").onclick = function(){
+  $("step3").classList.remove("hidden");
+};
+
+$("btnSubmit").onclick = async function(){
+  const file = $("slip").files[0];
+  if(!file){
+    $("msg3").textContent = "กรุณาแนบสลิป";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(){
+    const base64 = reader.result.split(",")[1];
+
+    const form = document.createElement("form");
+    form.method = "POST";
+    form.action = WEB_APP_URL;
+    form.target = "hidden_iframe";
+
+    const fields = {
+      token: TOKEN,
+      fullname: $("fullname").value,
+      phone: $("phone").value,
+      facebook: $("facebook").value,
+      lineId: $("lineId").value,
+      deposit: 1000,
+      fileName: file.name,
+      mimeType: file.type,
+      fileDataBase64: base64
+    };
+
+    for(const key in fields){
+      const input = document.createElement("input");
+      input.type = "hidden";
+      input.name = key;
+      input.value = fields[key];
+      form.appendChild(input);
+    }
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+
+    $("msg3").textContent = "✅ ส่งข้อมูลแล้ว รอตรวจสอบ";
+  };
+
+  reader.readAsDataURL(file);
+};
 </script>
+
+<iframe name="hidden_iframe" style="display:none;"></iframe>
 
 </body>
 </html>
