@@ -72,24 +72,23 @@ const TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
 
 function $(id){ return document.getElementById(id); }
 
-$("btnConfirm").onclick = function(){
-  if(!$("fullname").value || !$("phone").value || !$("facebook").value || !$("lineId").value){
-    $("msg1").textContent = "กรุณากรอกข้อมูลให้ครบ";
-    return;
-  }
-  $("step2").classList.remove("hidden");
-};
-
-$("btnNextUpload").onclick = function(){
-  $("step3").classList.remove("hidden");
-};
-
 $("btnSubmit").onclick = async function(){
+  const btn = $("btnSubmit");
+  const msg = $("msg3");
+  msg.className = "";
+  msg.textContent = "";
+
   const file = $("slip").files[0];
   if(!file){
-    $("msg3").textContent = "กรุณาแนบสลิป";
+    msg.textContent = "กรุณาแนบสลิป";
+    msg.className = "error";
     return;
   }
+
+  // กันกดซ้ำ
+  btn.disabled = true;
+  btn.style.opacity = "0.6";
+  msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารอสักครู่";
 
   const reader = new FileReader();
   reader.onload = function(){
@@ -124,7 +123,20 @@ $("btnSubmit").onclick = async function(){
     form.submit();
     document.body.removeChild(form);
 
-    $("msg3").textContent = "✅ ส่งข้อมูลแล้ว รอตรวจสอบ";
+    // ✅ แสดงผลแบบใช้งานจริง (รอให้สคริปต์ทำงาน)
+    setTimeout(() => {
+      msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ (ภายใน 24 ชม.)";
+      msg.className = "ok";
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }, 5000);
+  };
+
+  reader.onerror = function(){
+    msg.textContent = "❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
+    msg.className = "error";
+    btn.disabled = false;
+    btn.style.opacity = "1";
   };
 
   reader.readAsDataURL(file);
