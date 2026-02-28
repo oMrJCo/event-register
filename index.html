@@ -339,17 +339,20 @@
   }
 
   function checkStatus(){
-  const phone = document.getElementById("checkPhone").value.trim();
-  if(!phone){ alert("กรุณาใส่เบอร์โทร"); return; }
+  const phone = (el("checkPhone").value || "").trim();
+  if(!phone){
+    alert("กรุณาใส่เบอร์โทรเพื่อค้นหา");
+    return;
+  }
 
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGNTBkJZTVMLVP8qNZsEJ9qeHwf7zEybIeI2h1jTybvynHKAMjijaF6n5GkHI1oV3j/exec";
-  const TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
-
+  // ✅ ใช้ /status + กัน cache ด้วย timestamp
   const url = WEB_APP_URL.replace(/\/exec$/, "/exec/status")
     + "?token=" + encodeURIComponent(TOKEN)
-    + "&phone=" + encodeURIComponent(phone);
+    + "&phone=" + encodeURIComponent(phone)
+    + "&t=" + Date.now();
 
-  document.getElementById("statusFrame").src = url;
+  el("statusFrame").src = url;
+  scrollToId("step4");
 }
 </script>
 
