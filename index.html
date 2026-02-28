@@ -63,7 +63,7 @@
     .msg.ok{color:#0B6B0B}
     .hidden{display:none!important}
 
-    /* Status Result UI */
+    /* Status Result UI (inline for Android/PC) */
     .status-card{margin-top:12px;border:1px solid rgba(229,231,235,.85);border-radius:16px;background:#fff;overflow:hidden}
     .status-inner{padding:14px}
     .status-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -77,10 +77,6 @@
     .hint{margin-top:10px;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;color:#92400E;
       background:linear-gradient(180deg, rgba(247,201,72,.22), rgba(255,244,204,.45));
       border:1px solid rgba(234,179,8,.18);}
-
-    .fallback{margin-top:12px;border-radius:16px;padding:12px;border:1px solid rgba(229,231,235,.9);background:#fff}
-    .fallback b{display:block;margin-bottom:6px}
-    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:12px;word-break:break-all;color:#374151}
   </style>
 </head>
 <body>
@@ -216,18 +212,9 @@
             <button class="btn-ghost" type="button" onclick="scrollToId('step1')">กลับไปด้านบน</button>
           </div>
 
+          <!-- Android/PC: inline result -->
           <div id="statusBox" class="status-card hidden">
             <div class="status-inner" id="statusInner"></div>
-          </div>
-
-          <div id="fallbackBox" class="fallback hidden">
-            <b>iPhone บล็อกการโหลดข้อมูลในหน้า</b>
-            <div class="help">กดปุ่มด้านล่างเพื่อเปิดผลสถานะโดยตรง (วิธีนี้ชัวร์ที่สุดบน iOS)</div>
-            <div class="btnrow" style="margin-top:10px">
-              <button class="btn-secondary" type="button" id="btnOpenDirect">เปิดผลสถานะ (Safari)</button>
-            </div>
-            <div class="help" style="margin-top:10px">ลิงก์ (เผื่อคัดลอก):</div>
-            <div class="mono" id="directLinkText"></div>
           </div>
 
           <p id="msg4" class="msg"></p>
@@ -249,10 +236,16 @@
     if (!node) return;
     node.scrollIntoView({behavior:"smooth", block:"start"});
   }
-
   function isIOS(){
     const ua = navigator.userAgent || "";
     return /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  }
+  function buildDirectStatusUrl(phone){
+    const base = WEB_APP_URL.replace(/\/exec$/, "/exec/status");
+    return base
+      + "?token=" + encodeURIComponent(TOKEN)
+      + "&phone=" + encodeURIComponent(phone)
+      + "&t=" + Date.now();
   }
 
   function goStep2(){
@@ -298,7 +291,6 @@
       msg.textContent = "กรุณาแนบสลิปก่อนส่ง";
       return;
     }
-
     const MAX = 5 * 1024 * 1024;
     if(file.size > MAX){
       msg.className = "msg error";
@@ -383,7 +375,6 @@
       btn.style.opacity = "1";
       el("checkPhone").value = el("phone").value.trim();
       scrollToId("step4");
-      checkStatus();
     } else {
       msg.className = "msg error";
       msg.textContent = "❌ ส่งไม่สำเร็จ: " + (d.error || "Unknown error");
@@ -392,22 +383,7 @@
     }
   }
 
-  // ===== STATUS (JSONP + iOS fallback open direct)
-  function buildDirectStatusUrl(phone){
-    const base = WEB_APP_URL.replace(/\/exec$/, "/exec/status");
-    return base
-      + "?token=" + encodeURIComponent(TOKEN)
-      + "&phone=" + encodeURIComponent(phone)
-      + "&t=" + Date.now();
-  }
-
-  function showFallback(phone){
-    const direct = buildDirectStatusUrl(phone);
-    el("fallbackBox").classList.remove("hidden");
-    el("directLinkText").textContent = direct;
-    el("btnOpenDirect").onclick = () => window.open(direct, "_blank");
-  }
-
+  // ===== STATUS
   function renderStatus(data){
     const map = {
       pending:  { t:"รอตรวจสอบ",   bg:"#FFF4CC", c:"#92400E", dot:"#F59E0B" },
@@ -432,13 +408,16 @@
 
       <div class="hint">${escapeHtml(data.hint||"ถ้าสถานะยัง “รอตรวจสอบ” กรุณารอเจ้าหน้าที่ตรวจสอบ")}</div>
     `;
+
     el("statusInner").innerHTML = html;
     el("statusBox").classList.remove("hidden");
   }
 
   function renderNotFound(phone){
     el("statusInner").innerHTML = `
-      <div class="status-top"><div class="status-title">ผลการตรวจสอบสถานะ</div></div>
+      <div class="status-top">
+        <div class="status-title">ผลการตรวจสอบสถานะ</div>
+      </div>
       <div class="hint">ไม่พบข้อมูลการลงทะเบียนของเบอร์ ${escapeHtml(phone)}</div>
     `;
     el("statusBox").classList.remove("hidden");
@@ -450,8 +429,6 @@
     const btn = el("btnCheck");
 
     el("statusBox").classList.add("hidden");
-    el("fallbackBox").classList.add("hidden");
-
     msg.className = "msg";
     msg.textContent = "";
 
@@ -461,66 +438,40 @@
       return;
     }
 
+    // ✅ iPhone: ไปหน้า status ตรง ๆ แบบเนียน (ดีที่สุดบน iOS)
+    if (isIOS()) {
+      msg.className = "msg ok";
+      msg.textContent = "กำลังเปิดผลสถานะ…";
+      const direct = buildDirectStatusUrl(phone);
+      // เปิดในแท็บเดิม เพื่อไม่เจอ popup block
+      window.location.href = direct;
+      return;
+    }
+
+    // ✅ Android/PC: JSONP inline
     btn.disabled = true;
     btn.style.opacity = "0.65";
     msg.textContent = "⏳ กำลังตรวจสอบ...";
 
-    // ---- JSONP
     const cbName = "__cb_status_" + Date.now() + "_" + Math.floor(Math.random()*100000);
-    let done = false;
-
-    const finish = () => {
-      btn.disabled = false;
-      btn.style.opacity = "1";
-    };
-
-    const cleanup = () => {
-      try{ delete window[cbName]; }catch(e){ window[cbName] = undefined; }
-      const tag = document.getElementById(cbName);
-      if (tag) tag.remove();
-    };
-
-    // timeout (กัน iPhone ค้าง)
-    const to = setTimeout(()=>{
-      if (done) return;
-      done = true;
-      cleanup();
-      finish();
-
-      // iPhone: โชว์ fallback ให้กดเปิดตรงๆ (ชัวร์)
-      msg.className = "msg error";
-      msg.textContent = "❌ iPhone บล็อกการโหลดผลในหน้า (Safari) — กดเปิดผลสถานะด้านล่าง";
-      showFallback(phone);
-      scrollToId("step4");
-    }, 3500);
-
     window[cbName] = function(payload){
-      if (done) return;
-      done = true;
-      clearTimeout(to);
-
       try{
-        finish();
+        btn.disabled = false;
+        btn.style.opacity = "1";
         msg.textContent = "";
-        cleanup();
 
-        if (payload && payload.ok) {
-          renderStatus(payload.data);
-        } else if (payload && payload.notFound) {
-          renderNotFound(phone);
-        } else {
-          // ถ้า iPhone โดนบล็อกบ่อย -> เปิด fallback
+        if (payload && payload.ok) renderStatus(payload.data);
+        else if (payload && payload.notFound) renderNotFound(phone);
+        else {
           msg.className = "msg error";
-          msg.textContent = "❌ โหลดผลในหน้าไม่สำเร็จ — กดเปิดผลสถานะด้านล่าง";
-          showFallback(phone);
+          msg.textContent = "❌ ตรวจสอบไม่สำเร็จ";
         }
 
         scrollToId("step4");
-      } catch(_) {
-        finish();
-        msg.className = "msg error";
-        msg.textContent = "❌ เกิดข้อผิดพลาดในการแสดงผล";
-        showFallback(phone);
+      } finally {
+        try{ delete window[cbName]; }catch(e){ window[cbName] = undefined; }
+        const tag = document.getElementById(cbName);
+        if (tag) tag.remove();
       }
     };
 
@@ -535,16 +486,11 @@
     s.src = url;
     s.id = cbName;
     s.onerror = function(){
-      if (done) return;
-      done = true;
-      clearTimeout(to);
-      cleanup();
-      finish();
-
+      btn.disabled = false;
+      btn.style.opacity = "1";
       msg.className = "msg error";
-      msg.textContent = "❌ iPhone บล็อกการโหลดผลในหน้า — กดเปิดผลสถานะด้านล่าง";
-      showFallback(phone);
-      scrollToId("step4");
+      msg.textContent = "❌ โหลดข้อมูลสถานะไม่สำเร็จ";
+      try{ delete window[cbName]; }catch(e){ window[cbName] = undefined; }
     };
     document.body.appendChild(s);
   }
