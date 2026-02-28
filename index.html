@@ -270,7 +270,7 @@
     // 1) resize status iframe
     if (d && d.type === "resize") {
   const frame = el("statusFrame");
-  const h = Math.max(180, Math.floor(Number(d.height || 0)) + 12);
+  const h = Math.max(200, Math.floor(Number(d.height || 0)) + 24);
 
   if (frame && h && isFinite(h)) {
     frame.style.height = h + "px";
