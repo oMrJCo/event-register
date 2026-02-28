@@ -220,7 +220,7 @@
     </div>
   </div>
 
-  <iframe name="hidden_iframe" style="display:none;"></iframe>
+  <iframe id="hidden_iframe" name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
   const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGNTBkJZTVMLVP8qNZsEJ9qeHwf7zEybIeI2h1jTybvynHKAMjijaF6n5GkHI1oV3j/exec";
@@ -261,6 +261,32 @@
     el("fileNamePill").textContent = file ? file.name : "ยังไม่ได้เลือกไฟล์";
   }
 
+  // ==============
+  // ✅ LISTENERS (สำคัญมาก) ให้เข้ากับ Code.gs ที่ส่ง postMessage กลับมา
+  // ==============
+  window.addEventListener("message", (e)=>{
+    const d = e.data || {};
+
+    // 1) resize status iframe
+    if (d.type === "resize") {
+      const frame = el("statusFrame");
+      if (frame && e.source === frame.contentWindow) {
+        const h = Math.max(160, Number(d.height || 0) + 8);
+        frame.style.height = h + "px";
+      }
+      return;
+    }
+
+    // 2) submit result from GAS (hidden iframe)
+    if (d.type === "submitResult") {
+      handleSubmitResult(d);
+      return;
+    }
+  });
+
+  let _submitPending = false;
+  let _fallbackTimer = null;
+
   function submitSlip(){
     const btn = el("btnSubmit");
     const msg = el("msg3");
@@ -284,6 +310,23 @@
     btn.disabled = true;
     btn.style.opacity = "0.65";
     msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารอสักครู่";
+
+    _submitPending = true;
+
+    // fallback เผื่อไม่ได้รับ postMessage
+    if (_fallbackTimer) clearTimeout(_fallbackTimer);
+    _fallbackTimer = setTimeout(() => {
+      if (_submitPending) {
+        _submitPending = false;
+        msg.className = "msg ok";
+        msg.textContent = "✅ ส่งข้อมูลแล้ว (รอตรวจสอบ) — ถ้าไม่ขึ้นสถานะ ให้ลองตรวจสอบอีกครั้ง";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        // เติมเบอร์เช็คสถานะไว้ให้
+        el("checkPhone").value = el("phone").value.trim();
+        scrollToId("step4");
+      }
+    }, 8000);
 
     const reader = new FileReader();
 
@@ -318,17 +361,12 @@
       document.body.appendChild(form);
       form.submit();
       document.body.removeChild(form);
-
-      setTimeout(() => {
-        msg.className = "msg ok";
-        msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        scrollToId("step4");
-      }, 2500);
     };
 
     reader.onerror = function(){
+      if (_fallbackTimer) clearTimeout(_fallbackTimer);
+      _submitPending = false;
+
       msg.className = "msg error";
       msg.textContent = "❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
       btn.disabled = false;
@@ -338,22 +376,47 @@
     reader.readAsDataURL(file);
   }
 
-  function checkStatus(){
-  const phone = (el("checkPhone").value || "").trim();
-  if(!phone){
-    alert("กรุณาใส่เบอร์โทรเพื่อค้นหา");
-    return;
+  function handleSubmitResult(d){
+    const btn = el("btnSubmit");
+    const msg = el("msg3");
+
+    if (_fallbackTimer) clearTimeout(_fallbackTimer);
+    _submitPending = false;
+
+    if (d.ok) {
+      msg.className = "msg ok";
+      msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
+      btn.disabled = false;
+      btn.style.opacity = "1";
+
+      // เติมเบอร์เช็คสถานะไว้ให้ และเปิด status ทันที
+      el("checkPhone").value = el("phone").value.trim();
+      scrollToId("step4");
+      checkStatus();
+    } else {
+      msg.className = "msg error";
+      msg.textContent = "❌ ส่งไม่สำเร็จ: " + (d.error || "Unknown error");
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    }
   }
 
-  // ✅ ใช้ /status + กัน cache ด้วย timestamp
-  const url = WEB_APP_URL.replace(/\/exec$/, "/exec/status")
-    + "?token=" + encodeURIComponent(TOKEN)
-    + "&phone=" + encodeURIComponent(phone)
-    + "&t=" + Date.now();
+  function checkStatus(){
+    const phone = (el("checkPhone").value || "").trim();
+    if(!phone){
+      alert("กรุณาใส่เบอร์โทรเพื่อค้นหา");
+      return;
+    }
 
-  el("statusFrame").src = url;
-  scrollToId("step4");
-}
+    // ใช้ /status + กัน cache ด้วย timestamp
+    const url = WEB_APP_URL.replace(/\/exec$/, "/exec/status")
+      + "?token=" + encodeURIComponent(TOKEN)
+      + "&phone=" + encodeURIComponent(phone)
+      + "&t=" + Date.now();
+
+    el("statusFrame").src = url;
+    scrollToId("step4");
+  }
 </script>
 
 </body>
