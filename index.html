@@ -268,14 +268,15 @@
     const d = e.data || {};
 
     // 1) resize status iframe
-    if (d.type === "resize") {
-      const frame = el("statusFrame");
-      if (frame && e.source === frame.contentWindow) {
-        const h = Math.max(160, Number(d.height || 0) + 8);
-        frame.style.height = h + "px";
-      }
-      return;
-    }
+    if (d && d.type === "resize") {
+  const frame = el("statusFrame");
+  const h = Math.max(180, Math.floor(Number(d.height || 0)) + 12);
+
+  if (frame && h && isFinite(h)) {
+    frame.style.height = h + "px";
+  }
+  return;
+}
 
     // 2) submit result from GAS (hidden iframe)
     if (d.type === "submitResult") {
