@@ -339,20 +339,21 @@
   }
 
   function checkStatus(){
-    const phone = (el("checkPhone").value || "").trim();
-    if(!phone){
-      alert("กรุณาใส่เบอร์โทรเพื่อค้นหา");
-      return;
-    }
-
-    const url = WEB_APP_URL
-      + "?mode=status"
-      + "&token=" + encodeURIComponent(TOKEN)
-      + "&phone=" + encodeURIComponent(phone);
-
-    el("statusFrame").src = url;
-    scrollToId("step4");
+  const phone = (el("checkPhone").value || "").trim();
+  if(!phone){
+    alert("กรุณาใส่เบอร์โทรเพื่อค้นหา");
+    return;
   }
+
+  // ✅ ใช้ URL API กันพารามิเตอร์หลุด/กันกรณีมี query เดิมอยู่แล้ว
+  const u = new URL(WEB_APP_URL);
+  u.searchParams.set("mode", "status");
+  u.searchParams.set("token", TOKEN);
+  u.searchParams.set("phone", phone);
+
+  el("statusFrame").src = u.toString();
+  scrollToId("step4");
+}
 </script>
 
 </body>
