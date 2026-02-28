@@ -62,6 +62,21 @@
     .msg.error{color:#B00020}
     .msg.ok{color:#0B6B0B}
     .hidden{display:none!important}
+
+    /* Status Result UI (inline, no iframe) */
+    .status-card{margin-top:12px;border:1px solid rgba(229,231,235,.85);border-radius:16px;background:#fff;overflow:hidden}
+    .status-inner{padding:14px}
+    .status-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .status-title{font-weight:900;font-size:14px}
+    .status-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;font-weight:900;font-size:13px;border:1px solid rgba(0,0,0,.06)}
+    .dot{width:8px;height:8px;border-radius:999px}
+    .status-grid{margin-top:12px;display:grid;gap:8px}
+    .srow{border:1px solid rgba(229,231,235,.85);border-radius:14px;padding:10px 12px;background:#fff}
+    .k{font-size:12px;color:var(--muted);font-weight:800}
+    .v{margin-top:2px;font-size:14px;font-weight:900;word-break:break-word}
+    .hint{margin-top:10px;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;color:#92400E;
+      background:linear-gradient(180deg, rgba(247,201,72,.22), rgba(255,244,204,.45));
+      border:1px solid rgba(234,179,8,.18);}
   </style>
 </head>
 <body>
@@ -193,13 +208,16 @@
           </div>
 
           <div class="btnrow">
-            <button class="btn-primary" type="button" onclick="checkStatus()">ตรวจสอบสถานะ</button>
+            <button class="btn-primary" id="btnCheck" type="button" onclick="checkStatus()">ตรวจสอบสถานะ</button>
             <button class="btn-ghost" type="button" onclick="scrollToId('step1')">กลับไปด้านบน</button>
           </div>
 
-          <div style="margin-top:12px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff">
-            <iframe id="statusFrame" title="Status Result" style="width:100%;height:240px;border:0;display:block"></iframe>
+          <!-- result (no iframe) -->
+          <div id="statusBox" class="status-card hidden">
+            <div class="status-inner" id="statusInner"></div>
           </div>
+
+          <p id="msg4" class="msg"></p>
         </div>
       </section>
 
@@ -225,7 +243,6 @@
     const phone = el("phone").value.trim();
     const facebook = el("facebook").value.trim();
     const lineId = el("lineId").value.trim();
-
     if(!fullname || !phone || !facebook || !lineId){
       el("msg1").textContent = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
       return;
@@ -242,39 +259,14 @@
     el("fileNamePill").textContent = file ? file.name : "ยังไม่ได้เลือกไฟล์";
   }
 
-  // ===== IFRAME RESIZE (รับ + ขอซ้ำ)
-  function applyIframeHeight(h){
-    const frame = el("statusFrame");
-    const height = Math.max(240, Math.floor(Number(h || 0)) + 24);
-    if (frame && isFinite(height)) frame.style.height = height + "px";
-  }
-  function requestResize(){
-    const frame = el("statusFrame");
-    try{
-      if (frame && frame.contentWindow){
-        frame.contentWindow.postMessage({ type:"requestResize" }, "*");
-      }
-    }catch(e){}
-  }
+  // ===== SUBMIT (เหมือนเดิม)
+  let _submitPending = false;
+  let _fallbackTimer = null;
 
   window.addEventListener("message", (e)=>{
     const d = e.data || {};
-    if (d.type === "resize") { applyIframeHeight(d.height); return; }
-    if (d.type === "submitResult") { handleSubmitResult(d); return; }
+    if (d.type === "submitResult") handleSubmitResult(d);
   });
-
-  el("statusFrame").addEventListener("load", ()=>{
-    requestResize();
-    let n = 0;
-    const t = setInterval(()=>{
-      requestResize(); n++;
-      if (n >= 10) clearInterval(t);
-    }, 300);
-  });
-
-  // ===== SUBMIT
-  let _submitPending = false;
-  let _fallbackTimer = null;
 
   function submitSlip(){
     const btn = el("btnSubmit");
@@ -347,6 +339,7 @@
       form.submit();
       document.body.removeChild(form);
     };
+
     reader.onerror = function(){
       if (_fallbackTimer) clearTimeout(_fallbackTimer);
       _submitPending = false;
@@ -355,13 +348,13 @@
       btn.disabled = false;
       btn.style.opacity = "1";
     };
+
     reader.readAsDataURL(file);
   }
 
   function handleSubmitResult(d){
     const btn = el("btnSubmit");
     const msg = el("msg3");
-
     if (_fallbackTimer) clearTimeout(_fallbackTimer);
     _submitPending = false;
 
@@ -370,7 +363,6 @@
       msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
       btn.disabled = false;
       btn.style.opacity = "1";
-
       el("checkPhone").value = el("phone").value.trim();
       scrollToId("step4");
       checkStatus();
@@ -382,20 +374,117 @@
     }
   }
 
+  // ===== STATUS (JSONP - no iframe)
+  function renderStatus(data){
+    const map = {
+      pending:  { t:"รอตรวจสอบ",   bg:"#FFF4CC", c:"#92400E", dot:"#F59E0B" },
+      approved: { t:"อนุมัติแล้ว", bg:"#DCFCE7", c:"#166534", dot:"#22C55E" },
+      rejected: { t:"ไม่ผ่าน",     bg:"#FEE2E2", c:"#991B1B", dot:"#EF4444" },
+    };
+    const s = map[(data.status||"pending").toLowerCase()] || map.pending;
+
+    const html = `
+      <div class="status-top">
+        <div class="status-title">ผลการตรวจสอบสถานะ</div>
+        <div class="status-badge" style="background:${s.bg};color:${s.c}">
+          <span class="dot" style="background:${s.dot}"></span>${s.t}
+        </div>
+      </div>
+
+      <div class="status-grid">
+        <div class="srow"><div class="k">ชื่อ</div><div class="v">${escapeHtml(data.fullname||"-")}</div></div>
+        <div class="srow"><div class="k">เบอร์โทร</div><div class="v">${escapeHtml(data.phone||"-")}</div></div>
+        <div class="srow"><div class="k">เวลาลงทะเบียน</div><div class="v">${escapeHtml(data.tsText||"-")}</div></div>
+      </div>
+
+      <div class="hint">${escapeHtml(data.hint||"ถ้าสถานะยัง “รอตรวจสอบ” กรุณารอเจ้าหน้าที่ตรวจสอบ")}</div>
+    `;
+
+    el("statusInner").innerHTML = html;
+    el("statusBox").classList.remove("hidden");
+  }
+
+  function renderNotFound(phone){
+    el("statusInner").innerHTML = `
+      <div class="status-top">
+        <div class="status-title">ผลการตรวจสอบสถานะ</div>
+      </div>
+      <div class="hint">ไม่พบข้อมูลการลงทะเบียนของเบอร์ ${escapeHtml(phone)}</div>
+    `;
+    el("statusBox").classList.remove("hidden");
+  }
+
   function checkStatus(){
     const phone = (el("checkPhone").value || "").trim();
-    if(!phone){ alert("กรุณาใส่เบอร์โทรเพื่อค้นหา"); return; }
+    const msg = el("msg4");
+    const btn = el("btnCheck");
 
-    const url = WEB_APP_URL.replace(/\/exec$/, "/exec/status")
+    msg.className = "msg";
+    msg.textContent = "";
+
+    if(!phone){
+      msg.className = "msg error";
+      msg.textContent = "กรุณาใส่เบอร์โทรเพื่อค้นหา";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.style.opacity = "0.65";
+    msg.textContent = "⏳ กำลังตรวจสอบ...";
+
+    // JSONP callback
+    const cbName = "__cb_status_" + Date.now() + "_" + Math.floor(Math.random()*100000);
+    window[cbName] = function(payload){
+      try{
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        msg.textContent = "";
+
+        if (payload && payload.ok) {
+          renderStatus(payload.data);
+        } else if (payload && payload.notFound) {
+          renderNotFound(phone);
+        } else {
+          msg.className = "msg error";
+          msg.textContent = "❌ ตรวจสอบไม่สำเร็จ: " + (payload && payload.error ? payload.error : "Unknown error");
+        }
+
+        scrollToId("step4");
+      } finally {
+        // cleanup
+        try{ delete window[cbName]; }catch(e){ window[cbName] = undefined; }
+        const tag = document.getElementById(cbName);
+        if (tag) tag.remove();
+      }
+    };
+
+    const base = WEB_APP_URL.replace(/\/exec$/, "/exec/status_json");
+    const url = base
       + "?token=" + encodeURIComponent(TOKEN)
       + "&phone=" + encodeURIComponent(phone)
+      + "&callback=" + encodeURIComponent(cbName)
       + "&t=" + Date.now();
 
-    el("statusFrame").src = url;
-    scrollToId("step4");
+    const s = document.createElement("script");
+    s.src = url;
+    s.id = cbName;
+    s.onerror = function(){
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      msg.className = "msg error";
+      msg.textContent = "❌ โหลดข้อมูลสถานะไม่สำเร็จ (เครือข่าย/บล็อกสคริปต์)";
+      try{ delete window[cbName]; }catch(e){ window[cbName] = undefined; }
+    };
+    document.body.appendChild(s);
+  }
 
-    setTimeout(requestResize, 350);
-    setTimeout(requestResize, 900);
+  function escapeHtml(s){
+    return String(s || "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
   }
 </script>
 
