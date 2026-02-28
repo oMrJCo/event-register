@@ -212,7 +212,7 @@
           </div>
 
           <div style="margin-top:12px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff">
-            <iframe id="statusFrame" title="Status Result" style="width:100%;height:190px;border:0"></iframe>
+            <iframe id="statusFrame" title="Status Result" style="width:100%;height:220px;border:0;display:block"></iframe>
           </div>
         </div>
       </section>
@@ -236,7 +236,6 @@
 
   function goStep2(){
     el("msg1").textContent = "";
-
     const fullname = el("fullname").value.trim();
     const phone = el("phone").value.trim();
     const facebook = el("facebook").value.trim();
@@ -246,7 +245,6 @@
       el("msg1").textContent = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
       return;
     }
-
     el("step2").classList.remove("hidden");
     scrollToId("step2");
   }
@@ -261,30 +259,53 @@
     el("fileNamePill").textContent = file ? file.name : "ยังไม่ได้เลือกไฟล์";
   }
 
-  // ==============
-  // ✅ LISTENERS (สำคัญมาก) ให้เข้ากับ Code.gs ที่ส่ง postMessage กลับมา
-  // ==============
+  // ==========
+  // ✅ iframe RESIZE (รับจาก GAS) + HANDSHAKE ขอความสูงซ้ำ
+  // ==========
+  function applyIframeHeight(h){
+    const frame = el("statusFrame");
+    const height = Math.max(220, Math.floor(Number(h || 0)) + 24); // +24 กัน iOS เพี้ยน
+    if (frame && isFinite(height)) frame.style.height = height + "px";
+  }
+
+  function requestResize(){
+    const frame = el("statusFrame");
+    try{
+      if (frame && frame.contentWindow){
+        frame.contentWindow.postMessage({ type:"requestResize" }, "*");
+      }
+    }catch(e){}
+  }
+
+  // รับ postMessage (ไม่เช็ค e.source ให้จบปัญหา “ไม่แมตช์”)
   window.addEventListener("message", (e)=>{
     const d = e.data || {};
 
-    // 1) resize status iframe
-    if (d && d.type === "resize") {
-  const frame = el("statusFrame");
-  const h = Math.max(200, Math.floor(Number(d.height || 0)) + 24);
+    if (d.type === "resize") {
+      applyIframeHeight(d.height);
+      return;
+    }
 
-  if (frame && h && isFinite(h)) {
-    frame.style.height = h + "px";
-  }
-  return;
-  }
-
-    // 2) submit result from GAS (hidden iframe)
     if (d.type === "submitResult") {
       handleSubmitResult(d);
       return;
     }
   });
 
+  // ขอความสูงซ้ำทุกครั้งที่ iframe โหลด (กันกรณี message มาไม่ทัน)
+  el("statusFrame").addEventListener("load", ()=>{
+    requestResize();
+    let n = 0;
+    const t = setInterval(()=>{
+      requestResize();
+      n++;
+      if (n >= 10) clearInterval(t); // 10 ครั้งใน ~3 วิ
+    }, 300);
+  });
+
+  // ==========
+  // ✅ SUBMIT (form + hidden iframe) + รับผลจริงจาก GAS
+  // ==========
   let _submitPending = false;
   let _fallbackTimer = null;
 
@@ -313,8 +334,6 @@
     msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารอสักครู่";
 
     _submitPending = true;
-
-    // fallback เผื่อไม่ได้รับ postMessage
     if (_fallbackTimer) clearTimeout(_fallbackTimer);
     _fallbackTimer = setTimeout(() => {
       if (_submitPending) {
@@ -323,11 +342,10 @@
         msg.textContent = "✅ ส่งข้อมูลแล้ว (รอตรวจสอบ) — ถ้าไม่ขึ้นสถานะ ให้ลองตรวจสอบอีกครั้ง";
         btn.disabled = false;
         btn.style.opacity = "1";
-        // เติมเบอร์เช็คสถานะไว้ให้
         el("checkPhone").value = el("phone").value.trim();
         scrollToId("step4");
       }
-    }, 8000);
+    }, 9000);
 
     const reader = new FileReader();
 
@@ -390,7 +408,6 @@
       btn.disabled = false;
       btn.style.opacity = "1";
 
-      // เติมเบอร์เช็คสถานะไว้ให้ และเปิด status ทันที
       el("checkPhone").value = el("phone").value.trim();
       scrollToId("step4");
       checkStatus();
@@ -409,7 +426,6 @@
       return;
     }
 
-    // ใช้ /status + กัน cache ด้วย timestamp
     const url = WEB_APP_URL.replace(/\/exec$/, "/exec/status")
       + "?token=" + encodeURIComponent(TOKEN)
       + "&phone=" + encodeURIComponent(phone)
@@ -417,6 +433,10 @@
 
     el("statusFrame").src = url;
     scrollToId("step4");
+
+    // ขอ resize หลังตั้ง src ด้วย (กันกรณีโหลดช้า)
+    setTimeout(requestResize, 350);
+    setTimeout(requestResize, 900);
   }
 </script>
 
