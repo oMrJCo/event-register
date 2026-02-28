@@ -3,358 +3,524 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <title>ลงทะเบียนร่วมงาน (มัดจำ ฿1,000)</title>
+  <title>Event Register</title>
   <style>
     :root{
-      --bg:#FFFDF7;
+      --bg:#ffffff;
       --card:#ffffff;
-      --text:#1F2937;
-      --muted:#6B7280;
-      --border:#E5E7EB;
+      --text:#111827;
+      --muted:#6b7280;
+      --line:#e5e7eb;
+      --yellow:#f6c343;
+      --yellow2:#ffd86b;
+      --danger:#ef4444;
+      --ok:#16a34a;
       --shadow: 0 10px 30px rgba(17,24,39,.08);
-      --yellow:#F7C948;
-      --yellow-soft:#FFF4CC;
-      --radius:18px;
+      --radius: 18px;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.35}
-    .wrap{max-width:820px;margin:0 auto;padding:18px 14px 40px}
-
-    .topbar{position:sticky;top:0;z-index:5;background:rgba(255,253,247,.88);backdrop-filter:blur(10px);border-bottom:1px solid rgba(229,231,235,.65)}
-    .topbar-inner{max-width:820px;margin:0 auto;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .brand{display:flex;align-items:center;gap:10px;min-width:0}
-    .logo{width:34px;height:34px;border-radius:12px;background:linear-gradient(145deg,var(--yellow),#FFE9A3);display:grid;place-items:center;box-shadow:0 8px 18px rgba(247,201,72,.35);flex:0 0 auto;color:#111827;font-weight:900}
-    .brand-title{display:flex;flex-direction:column;min-width:0}
-    .brand-title b{font-size:14px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .brand-title span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .badge{flex:0 0 auto;font-size:12px;padding:8px 10px;border-radius:999px;background:var(--yellow-soft);border:1px solid rgba(234,179,8,.25);color:#92400E;font-weight:700}
-
-    .hero{margin:14px 0 10px;padding:14px;border-radius:var(--radius);background:linear-gradient(180deg,rgba(247,201,72,.22),rgba(255,244,204,.45));border:1px solid rgba(234,179,8,.18)}
-    .hero h1{margin:0 0 6px;font-size:18px;letter-spacing:.2px}
-    .hero p{margin:0;font-size:13px;color:var(--muted)}
-
-    .grid{display:grid;gap:12px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
-    .card-head{padding:14px 14px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(229,231,235,.7);background:linear-gradient(180deg,rgba(255,244,204,.45),rgba(255,255,255,.75))}
-    .card-title{margin:0;font-size:15px;font-weight:900}
-    .card-sub{margin:4px 0 0;font-size:12px;color:var(--muted)}
-    .step{flex:0 0 auto;display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;color:#92400E;padding:8px 10px;border-radius:999px;background:rgba(247,201,72,.25);border:1px solid rgba(234,179,8,.18)}
-    .card-body{padding:14px}
-
-    .field{margin:10px 0}
-    label{display:block;font-size:12px;color:#374151;margin:0 0 6px;font-weight:800}
-    .req{color:#B45309;font-weight:900}
-    input{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:14px;font-size:15px;outline:none;background:#fff;transition:border .15s ease,box-shadow .15s ease}
-    input:focus{border-color:rgba(234,179,8,.55);box-shadow:0 0 0 4px rgba(247,201,72,.25)}
-    .help{margin-top:6px;font-size:12px;color:var(--muted)}
-
-    .btnrow{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
-    button{appearance:none;border:0;border-radius:14px;padding:12px 14px;font-size:15px;font-weight:900;cursor:pointer;width:100%;transition:transform .05s ease,opacity .2s ease,box-shadow .2s ease}
-    button:active{transform:translateY(1px)}
-    .btn-primary{background:linear-gradient(180deg,var(--yellow),#FFE08A);color:#111827;box-shadow:0 10px 18px rgba(247,201,72,.28)}
-    .btn-primary:hover{box-shadow:0 12px 22px rgba(247,201,72,.34)}
-    .btn-secondary{background:#fff;color:#92400E;border:1px solid rgba(234,179,8,.45)}
-    .btn-ghost{background:transparent;color:var(--muted);border:1px solid rgba(229,231,235,.9)}
-
-    .notice{background:var(--yellow-soft);border:1px solid rgba(234,179,8,.25);color:#92400E;border-radius:14px;padding:12px;font-size:13px;font-weight:700;margin:10px 0 0}
-    .qr-wrap{display:grid;place-items:center;gap:10px}
-    .qr-img{width:min(420px,100%);border-radius:16px;border:1px solid rgba(229,231,235,.85);box-shadow:0 10px 24px rgba(17,24,39,.10);background:#fff}
-
-    .upload-box{border:2px dashed rgba(234,179,8,.45);background:rgba(255,244,204,.25);border-radius:16px;padding:14px}
-    .upload-box b{display:block;margin-bottom:6px}
-    .file-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px}
-    .file-pill{flex:1 1 auto;min-width:220px;padding:10px 12px;border-radius:999px;border:1px solid rgba(229,231,235,.9);background:#fff;color:#111827;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-    .msg{margin-top:10px;font-size:13px;font-weight:800}
-    .msg.error{color:#B00020}
-    .msg.ok{color:#0B6B0B}
-
-    .hidden{display:none!important}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background:linear-gradient(180deg,#fff 0%, #fff7dd 100%);
+      min-height:100vh;
+    }
+    .wrap{
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 18px 14px 44px;
+    }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      padding: 14px 14px;
+      border:1px solid var(--line);
+      background: rgba(255,255,255,.86);
+      backdrop-filter: blur(6px);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 10px;
+      z-index: 5;
+    }
+    .brand{
+      display:flex; flex-direction:column; gap:2px;
+    }
+    .brand .title{
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+    .brand .sub{
+      font-size: 12px; color: var(--muted);
+    }
+    .pill{
+      background: linear-gradient(180deg, var(--yellow2), var(--yellow));
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 12px;
+      border:1px solid rgba(17,24,39,.08);
+    }
+    .card{
+      margin-top: 14px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding: 14px 14px 10px;
+      border-bottom:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,216,107,.35), rgba(255,255,255,0));
+    }
+    .card .hd h2{
+      margin:0;
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .card .hd p{
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    .card .bd{ padding: 14px; }
+    label{ display:block; font-size: 13px; color: var(--muted); margin: 10px 0 6px; }
+    input, select, button, textarea{
+      width:100%;
+      font: inherit;
+    }
+    input, textarea{
+      border:1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 12px;
+      outline:none;
+      background:#fff;
+    }
+    input:focus, textarea:focus{ border-color: rgba(246,195,67,.9); box-shadow: 0 0 0 4px rgba(246,195,67,.18); }
+    .row{ display:flex; gap:10px; }
+    .row > div{ flex:1; }
+    .btn{
+      border:none;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      cursor:pointer;
+      transition: transform .06s ease;
+    }
+    .btn:active{ transform: scale(.99); }
+    .btn-primary{
+      background: linear-gradient(180deg, var(--yellow2), var(--yellow));
+      border:1px solid rgba(17,24,39,.08);
+    }
+    .btn-ghost{
+      background:#fff;
+      border:1px solid var(--line);
+    }
+    .btn-danger{
+      background:#fff;
+      border:1px solid rgba(239,68,68,.35);
+      color: var(--danger);
+    }
+    .hint{
+      font-size: 12px; color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+    .msg{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      border:1px solid var(--line);
+      background:#fff;
+    }
+    .msg.ok{ border-color: rgba(22,163,74,.25); background: rgba(22,163,74,.06); }
+    .msg.bad{ border-color: rgba(239,68,68,.25); background: rgba(239,68,68,.06); }
+    .stepbar{
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin-top: 12px;
+    }
+    .chip{
+      font-size: 12px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      background:#fff;
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .chip.on{
+      background: rgba(246,195,67,.22);
+      border-color: rgba(246,195,67,.55);
+      color:#111827;
+    }
+    .qrbox{
+      display:flex; align-items:center; justify-content:center;
+      border:1px dashed rgba(17,24,39,.25);
+      border-radius: 16px;
+      padding: 14px;
+      background: rgba(255,216,107,.12);
+    }
+    .qrbox img{ width: 220px; height: 220px; image-rendering: pixelated; }
+    .small{
+      font-size:12px;color:var(--muted); line-height:1.4;
+      margin-top:10px;
+    }
+    .frameWrap{
+      border:1px solid var(--line);
+      border-radius: 16px;
+      overflow:hidden;
+      background:#fff;
+    }
+    iframe{
+      width:100%;
+      border:0;
+      display:block;
+      height: 420px; /* fallback, will auto-resize */
+    }
+    .footerActions{
+      display:flex; gap:10px; margin-top: 12px;
+    }
+    .footerActions .btn{ flex:1; }
+    .hide{ display:none !important; }
   </style>
 </head>
 <body>
-
-  <div class="topbar">
-    <div class="topbar-inner">
+  <div class="wrap">
+    <div class="topbar">
       <div class="brand">
-        <div class="logo">✓</div>
-        <div class="brand-title">
-          <b>ลงทะเบียนร่วมงาน</b>
-          <span>กรอกข้อมูล • โอน • แนบสลิป</span>
+        <div class="title" id="eventTitle">Event Register</div>
+        <div class="sub">ลงทะเบียน + แนบสลิปมัดจำ + ตรวจสอบสถานะ</div>
+      </div>
+      <div class="pill" id="envPill">Mobile-first</div>
+    </div>
+
+    <div class="stepbar" aria-label="steps">
+      <div class="chip on" id="chip1">1) กรอกข้อมูล</div>
+      <div class="chip" id="chip2">2) QR / Token</div>
+      <div class="chip" id="chip3">3) แนบสลิป</div>
+      <div class="chip" id="chip4">4) สถานะ</div>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="card" id="cardStep1">
+      <div class="hd">
+        <h2>Step 1 — กรอกข้อมูลลงทะเบียน</h2>
+        <p>กรอกข้อมูลให้ครบ แล้วกด “สร้างรายการลงทะเบียน”</p>
+      </div>
+      <div class="bd">
+        <label>ชื่อ-นามสกุล *</label>
+        <input id="name" placeholder="เช่น สมชาย ใจดี" autocomplete="name" />
+
+        <label>เบอร์โทร *</label>
+        <input id="phone" placeholder="เช่น 089xxxxxxx" inputmode="tel" autocomplete="tel" />
+
+        <div class="row">
+          <div>
+            <label>Facebook (ลิงก์/ชื่อ)</label>
+            <input id="facebook" placeholder="เช่น fb.com/xxx หรือชื่อบัญชี" />
+          </div>
+          <div>
+            <label>Line ID</label>
+            <input id="line" placeholder="เช่น jacklee" />
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btnCreate">สร้างรายการลงทะเบียน</button>
+        <div class="hint">ระบบจะสร้าง <b>Token</b> สำหรับอ้างอิง และใช้ตรวจสอบสถานะภายหลัง</div>
+
+        <div class="msg hide" id="msg1"></div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="card hide" id="cardStep2">
+      <div class="hd">
+        <h2>Step 2 — QR / Token</h2>
+        <p>บันทึกสำเร็จแล้ว ✅ เก็บ Token/QR ไว้ใช้ตรวจสอบสถานะ</p>
+      </div>
+      <div class="bd">
+        <div class="msg ok" id="regSummary"></div>
+
+        <div class="qrbox" style="margin-top:12px">
+          <img id="qrImg" alt="QR Code" />
+        </div>
+
+        <div class="small" id="statusLinkBox"></div>
+
+        <div class="footerActions">
+          <button class="btn btn-primary" id="btnGoUpload">ไปแนบสลิป</button>
+          <button class="btn btn-ghost" id="btnCopyLink">คัดลอกลิงก์สถานะ</button>
         </div>
       </div>
-      <div class="badge">มัดจำ ฿1,000</div>
     </div>
+
+    <!-- Step 3 -->
+    <div class="card hide" id="cardStep3">
+      <div class="hd">
+        <h2>Step 3 — แนบสลิปมัดจำ</h2>
+        <p>เลือกรูปสลิป แล้วกด “อัปโหลดสลิป” (รองรับ JPG/PNG/PDF)</p>
+      </div>
+      <div class="bd">
+        <label>ไฟล์สลิป *</label>
+        <input id="slipFile" type="file" accept="image/*,application/pdf" />
+
+        <div class="hint">
+          แนะนำ: ถ่าย/บันทึกไฟล์ให้ไม่เกิน ~5MB เพื่ออัปโหลดได้ลื่น<br/>
+          ถ้าไฟล์ใหญ่มาก Apps Script อาจรับไม่ไหว
+        </div>
+
+        <button class="btn btn-primary" id="btnUpload">อัปโหลดสลิป</button>
+        <div class="msg hide" id="msg3"></div>
+
+        <div class="footerActions">
+          <button class="btn btn-ghost" id="btnBackToQR">ย้อนกลับไปหน้า QR</button>
+          <button class="btn btn-primary" id="btnGoStatus">ไปดูสถานะ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="card hide" id="cardStep4">
+      <div class="hd">
+        <h2>Step 4 — ตรวจสอบสถานะ (แสดงใน iframe)</h2>
+        <p>หน้านี้โหลดจาก Google Apps Script และ auto-resize ได้</p>
+      </div>
+      <div class="bd">
+        <div class="frameWrap">
+          <iframe id="statusFrame" title="Status"></iframe>
+        </div>
+        <div class="hint" style="margin-top:10px">
+          ถ้าพี่เอา iframe นี้ไปฝังเว็บอื่น ให้ฝั่ง parent “รับ postMessage” เพื่อปรับความสูง (โค้ดตัวอย่างอยู่ใน Code.gs หน้า status แล้ว)
+        </div>
+
+        <div class="footerActions">
+          <button class="btn btn-ghost" id="btnBackToUpload">ย้อนกลับไปแนบสลิป</button>
+          <button class="btn btn-danger" id="btnReset">เริ่มใหม่</button>
+        </div>
+      </div>
+    </div>
+
   </div>
-
-  <div class="wrap">
-    <div class="hero">
-      <h1>ลงทะเบียนเพื่อบันทึกรายชื่อ</h1>
-      <p>กรอกข้อมูลให้ครบ → โอนมัดจำ → แนบสลิป → ส่ง ระบบจะบันทึกให้อัตโนมัติ</p>
-    </div>
-
-    <div class="grid">
-
-      <!-- SECTION 1 -->
-      <section class="card" id="step1">
-        <div class="card-head">
-          <div>
-            <h3 class="card-title">1) กรอกข้อมูลลงทะเบียน</h3>
-            <p class="card-sub">ใช้ข้อมูลสำหรับติดต่อและตรวจสอบสิทธิ์</p>
-          </div>
-          <div class="step">STEP 1/4</div>
-        </div>
-
-        <div class="card-body">
-          <div class="field">
-            <label>ชื่อ-สกุล <span class="req">*</span></label>
-            <input id="fullname" placeholder="เช่น สมชาย ใจดี" autocomplete="name" />
-          </div>
-
-          <div class="field">
-            <label>เบอร์โทร <span class="req">*</span></label>
-            <input id="phone" inputmode="numeric" placeholder="เช่น 09xxxxxxxx" autocomplete="tel" />
-            <div class="help">ใส่เลข 0 นำหน้าได้ ระบบเก็บเป็นข้อความ</div>
-          </div>
-
-          <div class="field">
-            <label>ชื่อ Facebook <span class="req">*</span></label>
-            <input id="facebook" placeholder="เช่น Somchai Jaidee" />
-          </div>
-
-          <div class="field">
-            <label>ID Line <span class="req">*</span></label>
-            <input id="lineId" placeholder="เช่น somchai123" />
-          </div>
-
-          <div class="btnrow">
-            <button class="btn-primary" id="btnConfirm" type="button" onclick="goStep2()">ยืนยันข้อมูล</button>
-          </div>
-
-          <p id="msg1" class="msg error"></p>
-        </div>
-      </section>
-
-      <!-- SECTION 2 -->
-      <section class="card hidden" id="step2">
-        <div class="card-head">
-          <div>
-            <h3 class="card-title">2) โอนมัดจำ ฿1,000</h3>
-            <p class="card-sub">สแกน QR เพื่อโอนเงิน แล้วกดไปแนบสลิป</p>
-          </div>
-          <div class="step">STEP 2/4</div>
-        </div>
-
-        <div class="card-body">
-          <div class="qr-wrap">
-            <img class="qr-img" src="qr-card.png" alt="QR Code" />
-          </div>
-
-          <div class="notice">โอนแล้ว กด “ไปแนบสลิป” เพื่อยืนยันสิทธิ์</div>
-
-          <div class="btnrow">
-            <button class="btn-primary" id="btnNextUpload" type="button" onclick="goStep3()">ไปแนบสลิป</button>
-            <button class="btn-ghost" type="button" onclick="scrollToId('step1')">กลับไปแก้ข้อมูล</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- SECTION 3 -->
-      <section class="card hidden" id="step3">
-        <div class="card-head">
-          <div>
-            <h3 class="card-title">3) แนบสลิป</h3>
-            <p class="card-sub">รองรับ JPG / PNG / PDF (ไม่เกิน 5MB)</p>
-          </div>
-          <div class="step">STEP 3/4</div>
-        </div>
-
-        <div class="card-body">
-          <div class="upload-box">
-            <b>ไฟล์สลิป <span class="req">*</span></b>
-            <div class="help">แตะเพื่อเลือกไฟล์ (มือถือ) หรือเลือกจากเครื่อง</div>
-
-            <div class="file-row">
-              <input id="slip" type="file" accept="image/*,application/pdf" style="flex:1 1 240px; min-width:220px" onchange="onFilePicked()" />
-              <div id="fileNamePill" class="file-pill">ยังไม่ได้เลือกไฟล์</div>
-            </div>
-          </div>
-
-          <div class="btnrow">
-            <button class="btn-primary" id="btnSubmit" type="button" onclick="submitSlip()">ส่งข้อมูล + สลิป</button>
-            <button class="btn-secondary" type="button" onclick="scrollToId('step2')">ดู QR อีกครั้ง</button>
-          </div>
-
-          <p id="msg3" class="msg"></p>
-        </div>
-      </section>
-
-      <!-- SECTION 4 -->
-      <section class="card" id="step4">
-        <div class="card-head">
-          <div>
-            <h3 class="card-title">4) ตรวจสอบสถานะการลงทะเบียน</h3>
-            <p class="card-sub">ใส่เบอร์โทรที่ลงทะเบียนไว้ ระบบจะแสดงสถานะล่าสุด</p>
-          </div>
-          <div class="step">STATUS</div>
-        </div>
-
-        <div class="card-body">
-          <div class="field">
-            <label>เบอร์โทรที่ใช้ลงทะเบียน <span class="req">*</span></label>
-            <input id="checkPhone" inputmode="numeric" placeholder="เช่น 09xxxxxxxx" />
-            <div class="help">กรอกเบอร์ให้ตรงกับที่ลงทะเบียน</div>
-          </div>
-
-          <div class="btnrow">
-            <button class="btn-primary" type="button" onclick="checkStatus()">ตรวจสอบสถานะ</button>
-            <button class="btn-ghost" type="button" onclick="scrollToId('step1')">กลับไปด้านบน</button>
-          </div>
-
-          <div style="margin-top:12px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff">
-            <iframe id="statusFrame" title="Status Result" style="width:100%;height:190px;border:0"></iframe>
-          </div>
-        </div>
-      </section>
-
-    </div>
-  </div>
-
-  <iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGNTBkJZTVMLVP8qNZsEJ9qeHwf7zEybIeI2h1jTybvynHKAMjijaF6n5GkHI1oV3j/exec";
-  const TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
+  // ====== CONFIG (แก้ 2 จุดนี้พอ) ======
+  const GAS_EXEC_URL = "PUT_YOUR_GAS_EXEC_URL_HERE"; // เช่น https://script.google.com/macros/s/XXXX/exec
+  const EVENT_NAME   = "Event Register";
+  // =====================================
 
-  function el(id){ return document.getElementById(id); }
+  document.getElementById("eventTitle").textContent = EVENT_NAME;
 
-  function scrollToId(id){
-    const node = el(id);
-    if (!node) return;
-    node.scrollIntoView({behavior:"smooth", block:"start"});
+  const el = (id) => document.getElementById(id);
+
+  const state = {
+    token: "",
+    phone: "",
+    statusUrl: "",
+  };
+
+  // ---------- UI helpers ----------
+  function setStep(n){
+    ["chip1","chip2","chip3","chip4"].forEach((cid,i)=>{
+      el(cid).classList.toggle("on", (i+1)===n);
+    });
+    el("cardStep1").classList.toggle("hide", n!==1);
+    el("cardStep2").classList.toggle("hide", n!==2);
+    el("cardStep3").classList.toggle("hide", n!==3);
+    el("cardStep4").classList.toggle("hide", n!==4);
+    sendHeight(); // for iframe embed cases
   }
 
-  function goStep2(){
-    el("msg1").textContent = "";
+  function showMsg(targetId, text, ok=true){
+    const m = el(targetId);
+    m.classList.remove("hide","ok","bad");
+    m.classList.add(ok ? "ok" : "bad");
+    m.textContent = text;
+    sendHeight();
+  }
 
-    const fullname = el("fullname").value.trim();
-    const phone = el("phone").value.trim();
+  function hideMsg(targetId){
+    const m = el(targetId);
+    m.classList.add("hide");
+    m.textContent = "";
+  }
+
+  function normalizePhone(p){
+    return (p||"").replace(/[^\d]/g,"").trim();
+  }
+
+  async function postJSON(url, body){
+    const res = await fetch(url, {
+      method:"POST",
+      headers: { "Content-Type":"text/plain;charset=utf-8" },
+      body: JSON.stringify(body),
+    });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); }
+    catch(e){ throw new Error("Response not JSON: " + text.slice(0,180)); }
+    if(!data.ok) throw new Error(data.error || "Request failed");
+    return data;
+  }
+
+  // ---------- Step 1: Create registration ----------
+  el("btnCreate").addEventListener("click", async ()=>{
+    hideMsg("msg1");
+
+    const name = el("name").value.trim();
+    const phone = normalizePhone(el("phone").value);
     const facebook = el("facebook").value.trim();
-    const lineId = el("lineId").value.trim();
+    const line = el("line").value.trim();
 
-    if(!fullname || !phone || !facebook || !lineId){
-      el("msg1").textContent = "กรุณากรอกข้อมูลให้ครบทุกช่อง";
-      return;
+    if(!name) return showMsg("msg1","กรุณากรอกชื่อ-นามสกุล", false);
+    if(!phone || phone.length < 9) return showMsg("msg1","กรุณากรอกเบอร์โทรให้ถูกต้อง", false);
+    if(!GAS_EXEC_URL || GAS_EXEC_URL.includes("PUT_YOUR_GAS_EXEC_URL_HERE")) {
+      return showMsg("msg1","ยังไม่ได้ตั้งค่า GAS_EXEC_URL ใน index.html", false);
     }
 
-    el("step2").classList.remove("hidden");
-    scrollToId("step2");
-  }
+    el("btnCreate").disabled = true;
+    el("btnCreate").textContent = "กำลังสร้างรายการ...";
 
-  function goStep3(){
-    el("step3").classList.remove("hidden");
-    scrollToId("step3");
-  }
+    try{
+      const data = await postJSON(GAS_EXEC_URL, {
+        action: "register",
+        payload: { name, phone, facebook, line, userAgent: navigator.userAgent }
+      });
 
-  function onFilePicked(){
-    const file = el("slip").files && el("slip").files[0];
-    el("fileNamePill").textContent = file ? file.name : "ยังไม่ได้เลือกไฟล์";
-  }
+      state.token = data.token;
+      state.phone = phone;
+      state.statusUrl = data.statusUrl;
 
-  function submitSlip(){
-    const btn = el("btnSubmit");
-    const msg = el("msg3");
-    msg.className = "msg";
-    msg.textContent = "";
+      el("regSummary").innerHTML =
+        `<b>สำเร็จ ✅</b><br/>Token: <b>${escapeHtml(state.token)}</b><br/>เบอร์: <b>${escapeHtml(state.phone)}</b>`;
 
-    const file = el("slip").files && el("slip").files[0];
-    if(!file){
-      msg.className = "msg error";
-      msg.textContent = "กรุณาแนบสลิปก่อนส่ง";
-      return;
+      // QR: use Google Chart API (ง่ายและพอเพียง)
+      const qrData = encodeURIComponent(state.statusUrl);
+      el("qrImg").src = `https://chart.googleapis.com/chart?cht=qr&chs=360x360&chl=${qrData}`;
+
+      el("statusLinkBox").innerHTML =
+        `ลิงก์สถานะ: <a href="${escapeAttr(state.statusUrl)}" target="_blank" rel="noopener">${escapeHtml(state.statusUrl)}</a>`;
+
+      setStep(2);
+    }catch(err){
+      showMsg("msg1", "สร้างรายการไม่สำเร็จ: " + err.message, false);
+    }finally{
+      el("btnCreate").disabled = false;
+      el("btnCreate").textContent = "สร้างรายการลงทะเบียน";
     }
+  });
 
-    const MAX = 5 * 1024 * 1024;
-    if(file.size > MAX){
-      msg.className = "msg error";
-      msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่";
-      return;
+  el("btnGoUpload").addEventListener("click", ()=> setStep(3));
+
+  el("btnCopyLink").addEventListener("click", async ()=>{
+    try{
+      await navigator.clipboard.writeText(state.statusUrl || "");
+      alert("คัดลอกลิงก์แล้ว");
+    }catch(e){
+      alert("คัดลอกไม่สำเร็จ ลองกดค้างเพื่อคัดลอกเอง");
     }
+  });
 
-    btn.disabled = true;
-    btn.style.opacity = "0.65";
-    msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารอสักครู่";
+  el("btnBackToQR").addEventListener("click", ()=> setStep(2));
 
-    const reader = new FileReader();
+  // ---------- Step 3: Upload slip ----------
+  el("btnUpload").addEventListener("click", async ()=>{
+    hideMsg("msg3");
+    if(!state.token || !state.phone) return showMsg("msg3","ยังไม่มี token/phone (ย้อนกลับไป Step 1)", false);
 
-    reader.onload = function(){
-      const base64 = String(reader.result).split(",")[1];
+    const f = el("slipFile").files && el("slipFile").files[0];
+    if(!f) return showMsg("msg3","กรุณาเลือกไฟล์สลิปก่อน", false);
 
-      const form = document.createElement("form");
-      form.method = "POST";
-      form.action = WEB_APP_URL;
-      form.target = "hidden_iframe";
+    // Read as base64
+    el("btnUpload").disabled = true;
+    el("btnUpload").textContent = "กำลังอัปโหลด...";
 
-      const fields = {
-        token: TOKEN,
-        fullname: el("fullname").value.trim(),
-        phone: el("phone").value.trim(),
-        facebook: el("facebook").value.trim(),
-        lineId: el("lineId").value.trim(),
-        deposit: 1000,
-        fileName: file.name,
-        mimeType: file.type || "application/octet-stream",
-        fileDataBase64: base64
-      };
+    try{
+      const base64 = await fileToBase64(f);
 
-      for(const key in fields){
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = key;
-        input.value = String(fields[key]);
-        form.appendChild(input);
-      }
+      const data = await postJSON(GAS_EXEC_URL, {
+        action: "uploadSlip",
+        payload: {
+          token: state.token,
+          phone: state.phone,
+          fileName: f.name,
+          mimeType: f.type || "application/octet-stream",
+          base64: base64.split(",")[1] // remove data:mime;base64,
+        }
+      });
 
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
+      showMsg("msg3", "อัปโหลดสำเร็จ ✅ " + (data.fileUrl ? "เปิดไฟล์: " + data.fileUrl : ""), true);
+    }catch(err){
+      showMsg("msg3", "อัปโหลดไม่สำเร็จ: " + err.message, false);
+    }finally{
+      el("btnUpload").disabled = false;
+      el("btnUpload").textContent = "อัปโหลดสลิป";
+    }
+  });
 
-      setTimeout(() => {
-        msg.className = "msg ok";
-        msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        scrollToId("step4");
-      }, 2500);
-    };
+  el("btnGoStatus").addEventListener("click", ()=>{
+    if(!state.statusUrl) return;
+    el("statusFrame").src = state.statusUrl;
+    setStep(4);
+  });
 
-    reader.onerror = function(){
-      msg.className = "msg error";
-      msg.textContent = "❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
-      btn.disabled = false;
-      btn.style.opacity = "1";
-    };
+  el("btnBackToUpload").addEventListener("click", ()=> setStep(3));
 
-    reader.readAsDataURL(file);
+  el("btnReset").addEventListener("click", ()=>{
+    // reset UI/state
+    state.token=""; state.phone=""; state.statusUrl="";
+    el("name").value=""; el("phone").value=""; el("facebook").value=""; el("line").value="";
+    el("slipFile").value="";
+    hideMsg("msg1"); hideMsg("msg3");
+    el("statusFrame").src = "about:blank";
+    setStep(1);
+  });
+
+  // ---------- Auto-resize (when this page itself is inside iframe somewhere) ----------
+  function sendHeight(){
+    try{
+      const h = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight
+      );
+      window.parent && window.parent.postMessage({ type:"resize", height: h }, "*");
+    }catch(e){}
   }
 
-  function checkStatus(){
-  const phone = (el("checkPhone").value || "").trim();
-  if(!phone){
-    alert("กรุณาใส่เบอร์โทรเพื่อค้นหา");
-    return;
+  // stable resize: ResizeObserver + fallback
+  const ro = new ResizeObserver(()=> sendHeight());
+  ro.observe(document.documentElement);
+  const mo = new MutationObserver(()=> sendHeight());
+  mo.observe(document.documentElement, { childList:true, subtree:true, attributes:true });
+
+  window.addEventListener("load", sendHeight);
+  window.addEventListener("orientationchange", ()=> setTimeout(sendHeight, 200));
+  window.addEventListener("resize", ()=> setTimeout(sendHeight, 120));
+
+  // ---------- utils ----------
+  function fileToBase64(file){
+    return new Promise((resolve,reject)=>{
+      const r = new FileReader();
+      r.onload = ()=> resolve(r.result);
+      r.onerror = ()=> reject(new Error("อ่านไฟล์ไม่สำเร็จ"));
+      r.readAsDataURL(file);
+    });
   }
 
-  // ✅ ใช้ /status + กัน cache ด้วย timestamp
-  const url = WEB_APP_URL.replace(/\/exec$/, "/exec/status")
-    + "?token=" + encodeURIComponent(TOKEN)
-    + "&phone=" + encodeURIComponent(phone)
-    + "&t=" + Date.now();
+  function escapeHtml(s){
+    return String(s||"").replace(/[&<>"']/g, m => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+    }[m]));
+  }
+  function escapeAttr(s){
+    return escapeHtml(s).replace(/"/g,"&quot;");
+  }
 
-  el("statusFrame").src = url;
-  scrollToId("step4");
-}
+  // init
+  setStep(1);
 </script>
-
 </body>
 </html>
