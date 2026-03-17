@@ -285,6 +285,10 @@
     var ua = navigator.userAgent || "";
     return /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
+  
+  function isFirefox() {
+    return navigator.userAgent.toLowerCase().indexOf("firefox") > -1;
+  }
 
   function showStatusCheck() {
     el("step4").classList.remove("hidden");
@@ -467,7 +471,7 @@
     el("statusBox").classList.add("hidden"); msg.className = "msg"; msg.textContent = "";
     if (!phone) { msg.className = "msg error"; msg.textContent = "กรุณาใส่เบอร์โทรเพื่อค้นหา"; return; }
     if (!isValidPhone(phone)) { msg.className = "msg error"; msg.textContent = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0"; return; }
-    if (isIOS()) { msg.className = "msg ok"; msg.textContent = "⏳ กำลังเปิดผลสถานะในแท็บใหม่..."; window.open(buildDirectStatusUrl(phone), "_blank"); return; }
+    if (isIOS() || isFirefox()) { msg.className = "msg ok"; msg.textContent = "⏳ กำลังเปิดผลสถานะในแท็บใหม่..."; window.open(buildDirectStatusUrl(phone), "_blank"); return; }
     btn.disabled = true; btn.style.opacity = "0.65"; msg.className = "msg warn"; msg.textContent = "⏳ กำลังตรวจสอบ...";
     var cbName = "__cb_status_" + Date.now() + "_" + Math.floor(Math.random()*100000);
     window[cbName] = function(payload) {
