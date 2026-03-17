@@ -23,7 +23,6 @@
     .brand-title span{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
     .badge{flex:0 0 auto;font-size:12px;padding:8px 10px;border-radius:999px;background:var(--yellow-soft);border:1px solid rgba(234,179,8,.25);color:#92400E;font-weight:700}
 
-    /* === Progress Bar === */
     .progress-wrap{margin:14px 0 10px;padding:14px;border-radius:var(--radius);background:#fff;border:1px solid var(--border);box-shadow:var(--shadow)}
     .progress-label{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:10px}
     .progress-steps{display:flex;align-items:center}
@@ -94,6 +93,16 @@
     .hint{margin-top:10px;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;color:#92400E;
       background:linear-gradient(180deg,rgba(247,201,72,.22),rgba(255,244,204,.45));
       border:1px solid rgba(234,179,8,.18);}
+
+    .already-reg{display:flex;align-items:center;justify-content:space-between;gap:10px;
+      padding:12px 14px;border-radius:var(--radius);background:#fff;
+      border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:10px;flex-wrap:wrap}
+    .already-reg span{font-size:13px;color:var(--muted);font-weight:700}
+    .already-reg button{width:auto;padding:10px 16px;font-size:13px;font-weight:900;
+      background:linear-gradient(180deg,var(--yellow),#FFE08A);color:#111827;
+      border:0;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(247,201,72,.3);
+      white-space:nowrap}
+    .already-reg button:active{transform:translateY(1px)}
   </style>
 </head>
 <body>
@@ -113,7 +122,6 @@
 
   <div class="wrap">
 
-    <!-- Progress Bar -->
     <div class="progress-wrap">
       <div class="progress-label" id="progressLabel">ขั้นตอนที่ 1 จาก 3 — กรอกข้อมูล</div>
       <div class="progress-steps">
@@ -134,6 +142,11 @@
       </div>
     </div>
 
+    <div class="already-reg">
+      <span>ลงทะเบียนไปแล้ว?</span>
+      <button type="button" onclick="showStatusCheck()">🔍 ตรวจสอบสถานะของฉัน</button>
+    </div>
+
     <div class="hero">
       <h1>ลงทะเบียนเพื่อบันทึกรายชื่อ</h1>
       <p>กรอกข้อมูลให้ครบ → โอนมัดจำ → แนบสลิป → ส่ง ระบบจะบันทึกให้อัตโนมัติ</p>
@@ -151,37 +164,30 @@
           <div class="step">STEP 1/3</div>
         </div>
         <div class="card-body">
-
           <div class="field">
             <label for="fullname">ชื่อ-สกุล <span class="req">*</span></label>
             <input type="text" id="fullname" placeholder="เช่น สมชาย ใจดี" autocomplete="name" />
             <div class="field-error" id="err-fullname">กรุณากรอกชื่อ-สกุล</div>
           </div>
-
           <div class="field">
             <label for="phone">เบอร์โทร <span class="req">*</span></label>
             <input type="tel" id="phone" inputmode="numeric" placeholder="เช่น 0812345678" autocomplete="tel" maxlength="10" />
             <div class="help">กรอกตัวเลข 10 หลัก (เช่น 0812345678)</div>
             <div class="field-error" id="err-phone">เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0</div>
           </div>
-
           <div class="field">
             <label for="facebook">ชื่อ Facebook <span class="req">*</span></label>
             <input type="text" id="facebook" placeholder="เช่น Somchai Jaidee" />
             <div class="field-error" id="err-facebook">กรุณากรอกชื่อ Facebook</div>
           </div>
-
           <div class="field">
             <label for="lineId">ID Line <span class="req">*</span></label>
             <input type="text" id="lineId" placeholder="เช่น somchai123" />
             <div class="field-error" id="err-lineId">กรุณากรอก ID Line</div>
           </div>
-
           <div class="btnrow">
             <button class="btn-primary" type="button" onclick="goStep2()">ยืนยันข้อมูล →</button>
           </div>
-
-          <!-- ข้อความ error รวม (แสดงถ้ากรอกไม่ครบ) -->
           <p id="msg1" class="msg error" style="display:none"></p>
         </div>
       </section>
@@ -225,17 +231,15 @@
               <div id="fileNamePill" class="file-pill">ยังไม่ได้เลือกไฟล์</div>
             </div>
           </div>
-
           <div class="btnrow">
             <button class="btn-primary" id="btnSubmit" type="button" onclick="submitSlip()">✉️ ส่งข้อมูล + สลิป</button>
             <button class="btn-secondary" type="button" onclick="scrollToId('step2')">← ดู QR อีกครั้ง</button>
           </div>
-
           <p id="msg3" class="msg"></p>
         </div>
       </section>
 
-      <!-- STEP 4 — ซ่อนไว้จนกว่าจะส่งข้อมูลสำเร็จ -->
+      <!-- STATUS -->
       <section class="card hidden" id="step4">
         <div class="card-head">
           <div>
@@ -244,23 +248,19 @@
           </div>
           <div class="step">STATUS</div>
         </div>
-
         <div class="card-body">
           <div class="field">
             <label for="checkPhone">เบอร์โทรที่ใช้ลงทะเบียน <span class="req">*</span></label>
             <input type="tel" id="checkPhone" inputmode="numeric" placeholder="เช่น 0812345678" maxlength="10" />
             <div class="help">กรอกเบอร์ให้ตรงกับที่ลงทะเบียน</div>
           </div>
-
           <div class="btnrow">
             <button class="btn-primary" id="btnCheck" type="button" onclick="checkStatus()">🔍 ตรวจสอบสถานะ</button>
             <button class="btn-ghost" type="button" onclick="scrollToId('step1')">↑ กลับไปด้านบน</button>
           </div>
-
           <div id="statusBox" class="status-card hidden">
             <div class="status-inner" id="statusInner"></div>
           </div>
-
           <p id="msg4" class="msg"></p>
         </div>
       </section>
@@ -271,24 +271,14 @@
   <iframe id="hidden_iframe" name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
-  /* ============================================================
-     ตั้งค่า Google Apps Script
-  ============================================================ */
   var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyGNTBkJZTVMLVP8qNZsEJ9qeHwf7zEybIeI2h1jTybvynHKAMjijaF6n5GkHI1oV3j/exec";
   var TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
 
-  /* ============================================================
-     ฟังก์ชันช่วยทั่วไป
-  ============================================================ */
-  function el(id) {
-    return document.getElementById(id);
-  }
+  function el(id) { return document.getElementById(id); }
 
   function scrollToId(id) {
     var node = el(id);
-    if (node) {
-      node.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    if (node) node.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function isIOS() {
@@ -296,50 +286,36 @@
     return /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   }
 
-  /* ============================================================
-     Progress Bar
-  ============================================================ */
+  function showStatusCheck() {
+    el("step4").classList.remove("hidden");
+    el("statusBox").classList.add("hidden");
+    el("msg4").textContent = "";
+    scrollToId("step4");
+    setTimeout(function() {
+      var inp = el("checkPhone");
+      if (inp) inp.focus();
+    }, 400);
+  }
+
   function setProgress(step) {
-    var labels = {
-      1: "ขั้นตอนที่ 1 จาก 3 — กรอกข้อมูล",
-      2: "ขั้นตอนที่ 2 จาก 3 — โอนมัดจำ",
-      3: "ขั้นตอนที่ 3 จาก 3 — แนบสลิป"
-    };
+    var labels = { 1:"ขั้นตอนที่ 1 จาก 3 — กรอกข้อมูล", 2:"ขั้นตอนที่ 2 จาก 3 — โอนมัดจำ", 3:"ขั้นตอนที่ 3 จาก 3 — แนบสลิป" };
     var labelEl = el("progressLabel");
     if (labelEl) labelEl.textContent = labels[step] || labels[1];
-
     for (var i = 1; i <= 3; i++) {
-      var dot = el("pd" + i);
-      var txt = el("pt" + i);
+      var dot = el("pd" + i); var txt = el("pt" + i);
       if (!dot || !txt) continue;
-      dot.classList.remove("active", "done");
-      txt.classList.remove("active", "done");
-      if (i < step) {
-        dot.classList.add("done");
-        dot.textContent = "✓";
-        txt.classList.add("done");
-      } else if (i === step) {
-        dot.classList.add("active");
-        txt.classList.add("active");
-      }
+      dot.classList.remove("active","done"); txt.classList.remove("active","done");
+      if (i < step) { dot.classList.add("done"); dot.textContent = "✓"; txt.classList.add("done"); }
+      else if (i === step) { dot.classList.add("active"); txt.classList.add("active"); }
     }
-
     for (var j = 1; j <= 2; j++) {
       var line = el("pl" + j);
       if (!line) continue;
-      if (j < step) {
-        line.classList.add("done");
-      } else {
-        line.classList.remove("done");
-      }
+      if (j < step) line.classList.add("done"); else line.classList.remove("done");
     }
   }
 
-  /* ============================================================
-     Validation
-  ============================================================ */
   function isValidPhone(phone) {
-    /* ยอมรับเบอร์ไทย 10 หลัก ขึ้นต้นด้วย 0 */
     var cleaned = phone.replace(/[\s\-]/g, "");
     return /^0[0-9]{9}$/.test(cleaned);
   }
@@ -347,93 +323,38 @@
   function markField(fieldId, isError) {
     var inputEl = el(fieldId);
     var errEl = el("err-" + fieldId);
-    if (inputEl) {
-      if (isError) {
-        inputEl.classList.add("error-field");
-      } else {
-        inputEl.classList.remove("error-field");
-      }
-    }
-    if (errEl) {
-      if (isError) {
-        errEl.classList.add("show");
-      } else {
-        errEl.classList.remove("show");
-      }
-    }
+    if (inputEl) { if (isError) inputEl.classList.add("error-field"); else inputEl.classList.remove("error-field"); }
+    if (errEl) { if (isError) errEl.classList.add("show"); else errEl.classList.remove("show"); }
   }
 
-  /* ล้าง error เมื่อผู้ใช้เริ่มพิมพ์ */
-  var watchFields = ["fullname", "phone", "facebook", "lineId"];
+  var watchFields = ["fullname","phone","facebook","lineId"];
   for (var fi = 0; fi < watchFields.length; fi++) {
     (function(fid) {
       var inputEl = el(fid);
-      if (inputEl) {
-        inputEl.addEventListener("input", function() {
-          markField(fid, false);
-        });
-      }
+      if (inputEl) inputEl.addEventListener("input", function() { markField(fid, false); });
     })(watchFields[fi]);
   }
 
-  /* ============================================================
-     STEP 1 → 2: ตรวจสอบข้อมูล
-  ============================================================ */
   function goStep2() {
     var fullname = el("fullname").value.trim();
     var phone    = el("phone").value.trim();
     var facebook = el("facebook").value.trim();
     var lineId   = el("lineId").value.trim();
-
-    /* เช็คทีละช่อง */
     var hasError = false;
-
-    if (!fullname) {
-      markField("fullname", true);
-      hasError = true;
-    } else {
-      markField("fullname", false);
-    }
-
-    if (!isValidPhone(phone)) {
-      markField("phone", true);
-      hasError = true;
-    } else {
-      markField("phone", false);
-    }
-
-    if (!facebook) {
-      markField("facebook", true);
-      hasError = true;
-    } else {
-      markField("facebook", false);
-    }
-
-    if (!lineId) {
-      markField("lineId", true);
-      hasError = true;
-    } else {
-      markField("lineId", false);
-    }
-
-    /* ถ้ามี error ให้หยุดและ scroll ไปที่ error แรก */
+    if (!fullname)           { markField("fullname", true);  hasError = true; } else { markField("fullname", false); }
+    if (!isValidPhone(phone)){ markField("phone", true);     hasError = true; } else { markField("phone", false); }
+    if (!facebook)           { markField("facebook", true);  hasError = true; } else { markField("facebook", false); }
+    if (!lineId)             { markField("lineId", true);    hasError = true; } else { markField("lineId", false); }
     if (hasError) {
       var firstErr = document.querySelector(".error-field");
-      if (firstErr) {
-        firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
+      if (firstErr) firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
-
-    /* ผ่านทุกช่อง → ไป Step 2 */
     el("step2").classList.remove("hidden");
     setProgress(2);
     scrollToId("step2");
   }
 
-  /* ============================================================
-     STEP 2 → 3
-  ============================================================ */
   function goStep3() {
     el("step3").classList.remove("hidden");
     setProgress(3);
@@ -445,9 +366,6 @@
     el("fileNamePill").textContent = file ? file.name : "ยังไม่ได้เลือกไฟล์";
   }
 
-  /* ============================================================
-     SUBMIT
-  ============================================================ */
   var _submitPending = false;
   var _fallbackTimer = null;
 
@@ -457,250 +375,126 @@
   });
 
   function submitSlip() {
-    var btn = el("btnSubmit");
-    var msg = el("msg3");
-    msg.className = "msg";
-    msg.textContent = "";
-
+    var btn = el("btnSubmit"); var msg = el("msg3");
+    msg.className = "msg"; msg.textContent = "";
     var file = el("slip").files && el("slip").files[0];
-    if (!file) {
-      msg.className = "msg error";
-      msg.textContent = "กรุณาแนบสลิปก่อนส่ง";
-      return;
-    }
-
-    var MAX = 5 * 1024 * 1024;
-    if (file.size > MAX) {
-      msg.className = "msg error";
-      msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่";
-      return;
-    }
-
-    btn.disabled = true;
-    btn.style.opacity = "0.65";
-    btn.textContent = "⏳ กำลังส่ง...";
-    msg.className = "msg warn";
-    msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารออีกสักครู่ อย่าปิดหน้านี้";
-
+    if (!file) { msg.className = "msg error"; msg.textContent = "กรุณาแนบสลิปก่อนส่ง"; return; }
+    if (file.size > 5*1024*1024) { msg.className = "msg error"; msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่"; return; }
+    btn.disabled = true; btn.style.opacity = "0.65"; btn.textContent = "⏳ กำลังส่ง...";
+    msg.className = "msg warn"; msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารออีกสักครู่ อย่าปิดหน้านี้";
     _submitPending = true;
     if (_fallbackTimer) clearTimeout(_fallbackTimer);
-
     _fallbackTimer = setTimeout(function() {
       if (_submitPending) {
         _submitPending = false;
         msg.className = "msg warn";
         msg.textContent = "⚠️ ส่งข้อมูลแล้ว แต่ยังไม่ได้รับการยืนยัน — กรุณาตรวจสอบสถานะด้านล่างหลังจากนี้ 2-3 นาที";
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.textContent = "✉️ ส่งข้อมูล + สลิป";
+        btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
         el("checkPhone").value = el("phone").value.trim();
         el("step4").classList.remove("hidden");
         scrollToId("step4");
       }
     }, 12000);
-
     var reader = new FileReader();
-
     reader.onload = function() {
       var base64 = String(reader.result).split(",")[1];
-
       var form = document.createElement("form");
-      form.method = "POST";
-      form.action = WEB_APP_URL;
-      form.target = "hidden_iframe";
-
-      var fields = {
-        token:        TOKEN,
-        fullname:     el("fullname").value.trim(),
-        phone:        el("phone").value.trim(),
-        facebook:     el("facebook").value.trim(),
-        lineId:       el("lineId").value.trim(),
-        deposit:      1000,
-        fileName:     file.name,
-        mimeType:     file.type || "application/octet-stream",
-        fileDataBase64: base64
-      };
-
+      form.method = "POST"; form.action = WEB_APP_URL; form.target = "hidden_iframe";
+      var fields = { token:TOKEN, fullname:el("fullname").value.trim(), phone:el("phone").value.trim(),
+        facebook:el("facebook").value.trim(), lineId:el("lineId").value.trim(),
+        deposit:1000, fileName:file.name, mimeType:file.type||"application/octet-stream", fileDataBase64:base64 };
       for (var key in fields) {
         var inp = document.createElement("input");
-        inp.type = "hidden";
-        inp.name = key;
-        inp.value = String(fields[key]);
+        inp.type = "hidden"; inp.name = key; inp.value = String(fields[key]);
         form.appendChild(inp);
       }
-
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
+      document.body.appendChild(form); form.submit(); document.body.removeChild(form);
     };
-
     reader.onerror = function() {
-      if (_fallbackTimer) clearTimeout(_fallbackTimer);
-      _submitPending = false;
-      msg.className = "msg error";
-      msg.textContent = "❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
-      btn.disabled = false;
-      btn.style.opacity = "1";
-      btn.textContent = "✉️ ส่งข้อมูล + สลิป";
+      if (_fallbackTimer) clearTimeout(_fallbackTimer); _submitPending = false;
+      msg.className = "msg error"; msg.textContent = "❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
+      btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
     };
-
     reader.readAsDataURL(file);
   }
 
   function handleSubmitResult(d) {
-    var btn = el("btnSubmit");
-    var msg = el("msg3");
+    var btn = el("btnSubmit"); var msg = el("msg3");
     if (_fallbackTimer) clearTimeout(_fallbackTimer);
-    _submitPending = false;
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.textContent = "✉️ ส่งข้อมูล + สลิป";
-
+    _submitPending = false; btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
     if (d.ok) {
-      msg.className = "msg ok";
-      msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
+      msg.className = "msg ok"; msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
       el("checkPhone").value = el("phone").value.trim();
-      el("step4").classList.remove("hidden");
-      scrollToId("step4");
+      el("step4").classList.remove("hidden"); scrollToId("step4");
     } else {
-      msg.className = "msg error";
-      msg.textContent = "❌ ส่งไม่สำเร็จ: " + (d.error || "ไม่ทราบสาเหตุ") + " กรุณาลองอีกครั้ง";
+      msg.className = "msg error"; msg.textContent = "❌ ส่งไม่สำเร็จ: " + (d.error || "ไม่ทราบสาเหตุ") + " กรุณาลองอีกครั้ง";
     }
   }
 
-  /* ============================================================
-     STATUS CHECK
-  ============================================================ */
   function buildDirectStatusUrl(phone) {
     var base = WEB_APP_URL.replace(/\/exec$/, "/exec/status");
-    return base
-      + "?token=" + encodeURIComponent(TOKEN)
-      + "&phone=" + encodeURIComponent(phone)
-      + "&t=" + Date.now();
+    return base + "?token=" + encodeURIComponent(TOKEN) + "&phone=" + encodeURIComponent(phone) + "&t=" + Date.now();
   }
 
   function renderStatus(data) {
     var map = {
-      pending:  { t: "รอตรวจสอบ",   bg: "#FFF4CC", c: "#92400E", dot: "#F59E0B" },
-      approved: { t: "อนุมัติแล้ว", bg: "#DCFCE7", c: "#166534", dot: "#22C55E" },
-      rejected: { t: "ไม่ผ่าน",     bg: "#FEE2E2", c: "#991B1B", dot: "#EF4444" }
+      pending:  { t:"รอตรวจสอบ",   bg:"#FFF4CC", c:"#92400E", dot:"#F59E0B" },
+      approved: { t:"อนุมัติแล้ว", bg:"#DCFCE7", c:"#166534", dot:"#22C55E" },
+      rejected: { t:"ไม่ผ่าน",     bg:"#FEE2E2", c:"#991B1B", dot:"#EF4444" }
     };
-    var statusKey = (data.status || "pending").toLowerCase();
-    var s = map[statusKey] || map.pending;
-
+    var s = map[(data.status||"pending").toLowerCase()] || map.pending;
     el("statusInner").innerHTML =
-      '<div class="status-top">' +
-        '<div class="status-title">ผลการตรวจสอบสถานะ</div>' +
-        '<div class="status-badge" style="background:' + s.bg + ';color:' + s.c + '">' +
-          '<span class="dot" style="background:' + s.dot + '"></span>' + s.t +
-        '</div>' +
-      '</div>' +
+      '<div class="status-top"><div class="status-title">ผลการตรวจสอบสถานะ</div>' +
+      '<div class="status-badge" style="background:'+s.bg+';color:'+s.c+'"><span class="dot" style="background:'+s.dot+'"></span>'+s.t+'</div></div>' +
       '<div class="status-grid">' +
-        '<div class="srow"><div class="k">ชื่อ</div><div class="v">' + escapeHtml(data.fullname || "-") + '</div></div>' +
-        '<div class="srow"><div class="k">เบอร์โทร</div><div class="v">' + escapeHtml(data.phone || "-") + '</div></div>' +
-        '<div class="srow"><div class="k">เวลาลงทะเบียน</div><div class="v">' + escapeHtml(data.tsText || "-") + '</div></div>' +
-      '</div>' +
-      '<div class="hint">' + escapeHtml(data.hint || 'ถ้าสถานะยัง "รอตรวจสอบ" กรุณารอเจ้าหน้าที่ตรวจสอบ') + '</div>';
-
+      '<div class="srow"><div class="k">ชื่อ</div><div class="v">'+escapeHtml(data.fullname||"-")+'</div></div>' +
+      '<div class="srow"><div class="k">เบอร์โทร</div><div class="v">'+escapeHtml(data.phone||"-")+'</div></div>' +
+      '<div class="srow"><div class="k">เวลาลงทะเบียน</div><div class="v">'+escapeHtml(data.tsText||"-")+'</div></div>' +
+      '</div><div class="hint">'+escapeHtml(data.hint||'ถ้าสถานะยัง "รอตรวจสอบ" กรุณารอเจ้าหน้าที่ตรวจสอบ')+'</div>';
     el("statusBox").classList.remove("hidden");
   }
 
   function renderNotFound(phone) {
     el("statusInner").innerHTML =
       '<div class="status-top"><div class="status-title">ผลการตรวจสอบสถานะ</div></div>' +
-      '<div class="hint">⚠️ ไม่พบข้อมูลการลงทะเบียนของเบอร์ ' + escapeHtml(phone) +
-      ' — กรุณาตรวจสอบเบอร์อีกครั้ง หรือรอ 2-3 นาทีแล้วลองใหม่</div>';
+      '<div class="hint">⚠️ ไม่พบข้อมูลการลงทะเบียนของเบอร์ '+escapeHtml(phone)+' — กรุณาตรวจสอบเบอร์อีกครั้ง หรือรอ 2-3 นาทีแล้วลองใหม่</div>';
     el("statusBox").classList.remove("hidden");
   }
 
   function checkStatus() {
     var phone = (el("checkPhone").value || "").trim();
-    var msg = el("msg4");
-    var btn = el("btnCheck");
-
-    el("statusBox").classList.add("hidden");
-    msg.className = "msg";
-    msg.textContent = "";
-
-    if (!phone) {
-      msg.className = "msg error";
-      msg.textContent = "กรุณาใส่เบอร์โทรเพื่อค้นหา";
-      return;
-    }
-
-    if (!isValidPhone(phone)) {
-      msg.className = "msg error";
-      msg.textContent = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0";
-      return;
-    }
-
-    /* iOS: เปิดแท็บใหม่แทนการ redirect ออกจากหน้า */
-    if (isIOS()) {
-      msg.className = "msg ok";
-      msg.textContent = "⏳ กำลังเปิดผลสถานะในแท็บใหม่...";
-      window.open(buildDirectStatusUrl(phone), "_blank");
-      return;
-    }
-
-    /* Android/PC: JSONP inline */
-    btn.disabled = true;
-    btn.style.opacity = "0.65";
-    msg.className = "msg warn";
-    msg.textContent = "⏳ กำลังตรวจสอบ...";
-
-    var cbName = "__cb_status_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+    var msg = el("msg4"); var btn = el("btnCheck");
+    el("statusBox").classList.add("hidden"); msg.className = "msg"; msg.textContent = "";
+    if (!phone) { msg.className = "msg error"; msg.textContent = "กรุณาใส่เบอร์โทรเพื่อค้นหา"; return; }
+    if (!isValidPhone(phone)) { msg.className = "msg error"; msg.textContent = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0"; return; }
+    if (isIOS()) { msg.className = "msg ok"; msg.textContent = "⏳ กำลังเปิดผลสถานะในแท็บใหม่..."; window.open(buildDirectStatusUrl(phone), "_blank"); return; }
+    btn.disabled = true; btn.style.opacity = "0.65"; msg.className = "msg warn"; msg.textContent = "⏳ กำลังตรวจสอบ...";
+    var cbName = "__cb_status_" + Date.now() + "_" + Math.floor(Math.random()*100000);
     window[cbName] = function(payload) {
       try {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        msg.textContent = "";
-
-        if (payload && payload.ok) {
-          renderStatus(payload.data);
-        } else if (payload && payload.notFound) {
-          renderNotFound(phone);
-        } else {
-          msg.className = "msg error";
-          msg.textContent = "❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง";
-        }
+        btn.disabled = false; btn.style.opacity = "1"; msg.textContent = "";
+        if (payload && payload.ok) renderStatus(payload.data);
+        else if (payload && payload.notFound) renderNotFound(phone);
+        else { msg.className = "msg error"; msg.textContent = "❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง"; }
         scrollToId("step4");
       } finally {
         try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
-        var tag = document.getElementById(cbName);
-        if (tag) tag.remove();
+        var tag = document.getElementById(cbName); if (tag) tag.remove();
       }
     };
-
     var base = WEB_APP_URL.replace(/\/exec$/, "/exec/status_json");
-    var url = base
-      + "?token=" + encodeURIComponent(TOKEN)
-      + "&phone=" + encodeURIComponent(phone)
-      + "&callback=" + encodeURIComponent(cbName)
-      + "&t=" + Date.now();
-
-    var s = document.createElement("script");
-    s.src = url;
-    s.id = cbName;
+    var url = base + "?token="+encodeURIComponent(TOKEN)+"&phone="+encodeURIComponent(phone)+"&callback="+encodeURIComponent(cbName)+"&t="+Date.now();
+    var s = document.createElement("script"); s.src = url; s.id = cbName;
     s.onerror = function() {
-      btn.disabled = false;
-      btn.style.opacity = "1";
-      msg.className = "msg error";
-      msg.textContent = "❌ โหลดข้อมูลสถานะไม่สำเร็จ กรุณาลองอีกครั้ง";
+      btn.disabled = false; btn.style.opacity = "1";
+      msg.className = "msg error"; msg.textContent = "❌ โหลดข้อมูลสถานะไม่สำเร็จ กรุณาลองอีกครั้ง";
       try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
     };
     document.body.appendChild(s);
   }
 
-  /* ============================================================
-     ป้องกัน XSS
-  ============================================================ */
   function escapeHtml(s) {
-    return String(s || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
   }
 </script>
 
