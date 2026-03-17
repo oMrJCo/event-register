@@ -260,11 +260,21 @@
   <iframe id="hidden_iframe" name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
+  /* ============================================================
+     ตั้งค่า — แก้ WEB_APP_URL และ TOKEN ให้ตรงกับ Google Apps Script ของคุณ
+  ============================================================ */
   var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZoooaEtBsLKUm3ppv-AIVipnC2w2WptAx5YHYwkfLZSTwIuMT7NRy0nHGZjY-AjSF/exec";
   var TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
 
+  /* ============================================================
+     ฟังก์ชันช่วยทั่วไป
+  ============================================================ */
   function el(id) { return document.getElementById(id); }
-  function scrollToId(id) { var node = el(id); if (node) node.scrollIntoView({ behavior: "smooth", block: "start" }); }
+
+  function scrollToId(id) {
+    var node = el(id);
+    if (node) node.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   function isIOS() {
     var ua = navigator.userAgent || "";
@@ -280,165 +290,272 @@
     el("statusBox").classList.add("hidden");
     el("msg4").textContent = "";
     scrollToId("step4");
-    setTimeout(function() { var inp = el("checkPhone"); if (inp) inp.focus(); }, 400);
+    setTimeout(function() {
+      var inp = el("checkPhone");
+      if (inp) inp.focus();
+    }, 400);
   }
 
+  /* ============================================================
+     Progress Bar
+  ============================================================ */
   function setProgress(step) {
-    var labels = { 1: "ขั้นตอนที่ 1 จาก 3 — กรอกข้อมูล", 2: "ขั้นตอนที่ 2 จาก 3 — โอนมัดจำ", 3: "ขั้นตอนที่ 3 จาก 3 — แนบสลิป" };
-    var labelEl = el("progressLabel"); if (labelEl) labelEl.textContent = labels[step] || labels[1];
+    var labels = {
+      1: "ขั้นตอนที่ 1 จาก 3 — กรอกข้อมูล",
+      2: "ขั้นตอนที่ 2 จาก 3 — โอนมัดจำ",
+      3: "ขั้นตอนที่ 3 จาก 3 — แนบสลิป"
+    };
+    var labelEl = el("progressLabel");
+    if (labelEl) labelEl.textContent = labels[step] || labels[1];
     for (var i = 1; i <= 3; i++) {
-      var dot = el("pd" + i); var txt = el("pt" + i); if (!dot || !txt) continue;
-      dot.classList.remove("active","done"); txt.classList.remove("active","done");
+      var dot = el("pd" + i); var txt = el("pt" + i);
+      if (!dot || !txt) continue;
+      dot.classList.remove("active", "done"); txt.classList.remove("active", "done");
       if (i < step) { dot.classList.add("done"); dot.textContent = "✓"; txt.classList.add("done"); }
       else if (i === step) { dot.classList.add("active"); txt.classList.add("active"); }
     }
-    for (var j = 1; j <= 2; j++) { var line = el("pl" + j); if (!line) continue; if (j < step) line.classList.add("done"); else line.classList.remove("done"); }
+    for (var j = 1; j <= 2; j++) {
+      var line = el("pl" + j);
+      if (!line) continue;
+      if (j < step) line.classList.add("done"); else line.classList.remove("done");
+    }
   }
 
-  function isValidPhone(phone) { return /^0[0-9]{9}$/.test(phone.replace(/[\s\-]/g,"")); }
+  /* ============================================================
+     Validation
+  ============================================================ */
+  function isValidPhone(phone) {
+    var cleaned = phone.replace(/[\s\-]/g, "");
+    return /^0[0-9]{9}$/.test(cleaned);
+  }
 
   function markField(fieldId, isError) {
-    var inputEl = el(fieldId); var errEl = el("err-" + fieldId);
+    var inputEl = el(fieldId);
+    var errEl = el("err-" + fieldId);
     if (inputEl) { if (isError) inputEl.classList.add("error-field"); else inputEl.classList.remove("error-field"); }
     if (errEl) { if (isError) errEl.classList.add("show"); else errEl.classList.remove("show"); }
   }
 
-  var watchFields = ["fullname","phone","facebook","lineId"];
+  var watchFields = ["fullname", "phone", "facebook", "lineId"];
   for (var fi = 0; fi < watchFields.length; fi++) {
-    (function(fid) { var inputEl = el(fid); if (inputEl) inputEl.addEventListener("input", function() { markField(fid, false); }); })(watchFields[fi]);
+    (function(fid) {
+      var inputEl = el(fid);
+      if (inputEl) inputEl.addEventListener("input", function() { markField(fid, false); });
+    })(watchFields[fi]);
   }
 
+  /* ============================================================
+     STEP 1 → 2
+  ============================================================ */
   function goStep2() {
-    var fullname = el("fullname").value.trim(); var phone = el("phone").value.trim();
-    var facebook = el("facebook").value.trim(); var lineId = el("lineId").value.trim();
+    var fullname = el("fullname").value.trim();
+    var phone    = el("phone").value.trim();
+    var facebook = el("facebook").value.trim();
+    var lineId   = el("lineId").value.trim();
     var hasError = false;
-    if (!fullname)            { markField("fullname",true);  hasError=true; } else { markField("fullname",false); }
-    if (!isValidPhone(phone)) { markField("phone",true);     hasError=true; } else { markField("phone",false); }
-    if (!facebook)            { markField("facebook",true);  hasError=true; } else { markField("facebook",false); }
-    if (!lineId)              { markField("lineId",true);    hasError=true; } else { markField("lineId",false); }
-    if (hasError) { var firstErr = document.querySelector(".error-field"); if (firstErr) firstErr.scrollIntoView({behavior:"smooth",block:"center"}); return; }
-    el("step2").classList.remove("hidden"); setProgress(2); scrollToId("step2");
+    if (!fullname)            { markField("fullname", true);  hasError = true; } else { markField("fullname", false); }
+    if (!isValidPhone(phone)) { markField("phone", true);     hasError = true; } else { markField("phone", false); }
+    if (!facebook)            { markField("facebook", true);  hasError = true; } else { markField("facebook", false); }
+    if (!lineId)              { markField("lineId", true);    hasError = true; } else { markField("lineId", false); }
+    if (hasError) {
+      var firstErr = document.querySelector(".error-field");
+      if (firstErr) firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    el("step2").classList.remove("hidden");
+    setProgress(2);
+    scrollToId("step2");
   }
 
-  function goStep3() { el("step3").classList.remove("hidden"); setProgress(3); scrollToId("step3"); }
-  function onFilePicked() { var file = el("slip").files && el("slip").files[0]; el("fileNamePill").textContent = file ? file.name : "ยังไม่ได้เลือกไฟล์"; }
+  /* ============================================================
+     STEP 2 → 3
+  ============================================================ */
+  function goStep3() {
+    el("step3").classList.remove("hidden");
+    setProgress(3);
+    scrollToId("step3");
+  }
 
-  var _submitPending = false; var _fallbackTimer = null;
-  window.addEventListener("message", function(e) { var d = e.data || {}; if (d.type === "submitResult") handleSubmitResult(d); });
+  function onFilePicked() {
+    var file = el("slip").files && el("slip").files[0];
+    el("fileNamePill").textContent = file ? file.name : "ยังไม่ได้เลือกไฟล์";
+  }
+
+  /* ============================================================
+     SUBMIT
+  ============================================================ */
+  var _submitPending = false;
+  var _fallbackTimer = null;
+
+  window.addEventListener("message", function(e) {
+    var d = e.data || {};
+    if (d.type === "submitResult") handleSubmitResult(d);
+  });
 
   function submitSlip() {
     var btn = el("btnSubmit"); var msg = el("msg3");
     msg.className = "msg"; msg.textContent = "";
     var file = el("slip").files && el("slip").files[0];
-    if (!file) { msg.className="msg error"; msg.textContent="กรุณาแนบสลิปก่อนส่ง"; return; }
-    if (file.size > 5*1024*1024) { msg.className="msg error"; msg.textContent="ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่"; return; }
-    btn.disabled=true; btn.style.opacity="0.65"; btn.textContent="⏳ กำลังส่ง...";
-    msg.className="msg warn"; msg.textContent="⏳ กำลังส่งข้อมูล... กรุณารออีกสักครู่ อย่าปิดหน้านี้";
-    _submitPending=true;
+    if (!file) { msg.className = "msg error"; msg.textContent = "กรุณาแนบสลิปก่อนส่ง"; return; }
+    if (file.size > 5 * 1024 * 1024) { msg.className = "msg error"; msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่"; return; }
+    btn.disabled = true; btn.style.opacity = "0.65"; btn.textContent = "⏳ กำลังส่ง...";
+    msg.className = "msg warn"; msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารออีกสักครู่ อย่าปิดหน้านี้";
+    _submitPending = true;
     if (_fallbackTimer) clearTimeout(_fallbackTimer);
     _fallbackTimer = setTimeout(function() {
       if (_submitPending) {
-        _submitPending=false;
-        msg.className="msg warn"; msg.textContent="⚠️ ส่งข้อมูลแล้ว แต่ยังไม่ได้รับการยืนยัน — กรุณาตรวจสอบสถานะด้านล่างหลังจากนี้ 2-3 นาที";
-        btn.disabled=false; btn.style.opacity="1"; btn.textContent="✉️ ส่งข้อมูล + สลิป";
+        _submitPending = false;
+        msg.className = "msg warn";
+        msg.textContent = "⚠️ ส่งข้อมูลแล้ว แต่ยังไม่ได้รับการยืนยัน — กรุณาตรวจสอบสถานะด้านล่างหลังจากนี้ 2-3 นาที";
+        btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
         el("checkPhone").value = el("phone").value.trim();
-        el("step4").classList.remove("hidden"); scrollToId("step4");
+        el("step4").classList.remove("hidden");
+        scrollToId("step4");
       }
     }, 12000);
     var reader = new FileReader();
     reader.onload = function() {
       var base64 = String(reader.result).split(",")[1];
       var form = document.createElement("form");
-      form.method="POST"; form.action=WEB_APP_URL; form.target="hidden_iframe";
-      var fields = { token:TOKEN, fullname:el("fullname").value.trim(), phone:el("phone").value.trim(), facebook:el("facebook").value.trim(), lineId:el("lineId").value.trim(), deposit:1000, fileName:file.name, mimeType:file.type||"application/octet-stream", fileDataBase64:base64 };
-      for (var key in fields) { var inp = document.createElement("input"); inp.type="hidden"; inp.name=key; inp.value=String(fields[key]); form.appendChild(inp); }
+      form.method = "POST"; form.action = WEB_APP_URL; form.target = "hidden_iframe";
+      var fields = {
+        token: TOKEN, fullname: el("fullname").value.trim(), phone: el("phone").value.trim(),
+        facebook: el("facebook").value.trim(), lineId: el("lineId").value.trim(),
+        deposit: 1000, fileName: file.name, mimeType: file.type || "application/octet-stream",
+        fileDataBase64: base64
+      };
+      for (var key in fields) {
+        var inp = document.createElement("input");
+        inp.type = "hidden"; inp.name = key; inp.value = String(fields[key]);
+        form.appendChild(inp);
+      }
       document.body.appendChild(form); form.submit(); document.body.removeChild(form);
     };
     reader.onerror = function() {
-      if (_fallbackTimer) clearTimeout(_fallbackTimer); _submitPending=false;
-      msg.className="msg error"; msg.textContent="❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
-      btn.disabled=false; btn.style.opacity="1"; btn.textContent="✉️ ส่งข้อมูล + สลิป";
+      if (_fallbackTimer) clearTimeout(_fallbackTimer); _submitPending = false;
+      msg.className = "msg error"; msg.textContent = "❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
+      btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
     };
     reader.readAsDataURL(file);
   }
 
   function handleSubmitResult(d) {
-    var btn=el("btnSubmit"); var msg=el("msg3");
+    var btn = el("btnSubmit"); var msg = el("msg3");
     if (_fallbackTimer) clearTimeout(_fallbackTimer);
-    _submitPending=false; btn.disabled=false; btn.style.opacity="1"; btn.textContent="✉️ ส่งข้อมูล + สลิป";
-    if (d.ok) { msg.className="msg ok"; msg.textContent="✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ"; el("checkPhone").value=el("phone").value.trim(); el("step4").classList.remove("hidden"); scrollToId("step4"); }
-    else { msg.className="msg error"; msg.textContent="❌ ส่งไม่สำเร็จ: "+(d.error||"ไม่ทราบสาเหตุ")+" กรุณาลองอีกครั้ง"; }
+    _submitPending = false; btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
+    if (d.ok) {
+      msg.className = "msg ok"; msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
+      el("checkPhone").value = el("phone").value.trim();
+      el("step4").classList.remove("hidden"); scrollToId("step4");
+    } else {
+      msg.className = "msg error"; msg.textContent = "❌ ส่งไม่สำเร็จ: " + (d.error || "ไม่ทราบสาเหตุ") + " กรุณาลองอีกครั้ง";
+    }
   }
 
+  /* ============================================================
+     STATUS CHECK
+  ============================================================ */
   function buildDirectStatusUrl(phone) {
     var base = WEB_APP_URL.replace(/\/exec$/, "/exec/status");
     return base + "?token=" + encodeURIComponent(TOKEN) + "&phone=" + encodeURIComponent(phone) + "&t=" + Date.now();
   }
 
   function renderStatus(data) {
-    var map = { pending:{t:"รอตรวจสอบ",bg:"#FFF4CC",c:"#92400E",dot:"#F59E0B"}, approved:{t:"อนุมัติแล้ว",bg:"#DCFCE7",c:"#166534",dot:"#22C55E"}, rejected:{t:"ไม่ผ่าน",bg:"#FEE2E2",c:"#991B1B",dot:"#EF4444"} };
-    var s = map[(data.status||"pending").toLowerCase()] || map.pending;
+    var map = {
+      pending:  { t: "รอตรวจสอบ",   bg: "#FFF4CC", c: "#92400E", dot: "#F59E0B" },
+      approved: { t: "อนุมัติแล้ว", bg: "#DCFCE7", c: "#166534", dot: "#22C55E" },
+      rejected: { t: "ไม่ผ่าน",     bg: "#FEE2E2", c: "#991B1B", dot: "#EF4444" }
+    };
+    var s = map[(data.status || "pending").toLowerCase()] || map.pending;
     el("statusInner").innerHTML =
-      '<div class="status-top"><div class="status-title">ผลการตรวจสอบสถานะ</div>'+
-      '<div class="status-badge" style="background:'+s.bg+';color:'+s.c+'"><span class="dot" style="background:'+s.dot+'"></span>'+s.t+'</div></div>'+
-      '<div class="status-grid">'+
-      '<div class="srow"><div class="k">ชื่อ</div><div class="v">'+escapeHtml(data.fullname||"-")+'</div></div>'+
-      '<div class="srow"><div class="k">เบอร์โทร</div><div class="v">'+escapeHtml(data.phone||"-")+'</div></div>'+
-      '<div class="srow"><div class="k">เวลาลงทะเบียน</div><div class="v">'+escapeHtml(data.tsText||"-")+'</div></div>'+
-      '</div><div class="hint">'+escapeHtml(data.hint||'ถ้าสถานะยัง "รอตรวจสอบ" กรุณารอเจ้าหน้าที่ตรวจสอบ')+'</div>';
+      '<div class="status-top"><div class="status-title">ผลการตรวจสอบสถานะ</div>' +
+      '<div class="status-badge" style="background:' + s.bg + ';color:' + s.c + '">' +
+      '<span class="dot" style="background:' + s.dot + '"></span>' + s.t + '</div></div>' +
+      '<div class="status-grid">' +
+      '<div class="srow"><div class="k">ชื่อ</div><div class="v">' + escapeHtml(data.fullname || "-") + '</div></div>' +
+      '<div class="srow"><div class="k">เบอร์โทร</div><div class="v">' + escapeHtml(data.phone || "-") + '</div></div>' +
+      '<div class="srow"><div class="k">เวลาลงทะเบียน</div><div class="v">' + escapeHtml(data.tsText || "-") + '</div></div>' +
+      '</div><div class="hint">' + escapeHtml(data.hint || 'ถ้าสถานะยัง "รอตรวจสอบ" กรุณารอเจ้าหน้าที่ตรวจสอบ') + '</div>';
     el("statusBox").classList.remove("hidden");
   }
 
   function renderNotFound(phone) {
     el("statusInner").innerHTML =
-      '<div class="status-top"><div class="status-title">ผลการตรวจสอบสถานะ</div></div>'+
-      '<div class="hint">⚠️ ไม่พบข้อมูลการลงทะเบียนของเบอร์ '+escapeHtml(phone)+' — กรุณาตรวจสอบเบอร์อีกครั้ง หรือรอ 2-3 นาทีแล้วลองใหม่</div>';
+      '<div class="status-top"><div class="status-title">ผลการตรวจสอบสถานะ</div></div>' +
+      '<div class="hint">⚠️ ไม่พบข้อมูลการลงทะเบียนของเบอร์ ' + escapeHtml(phone) +
+      ' — กรุณาตรวจสอบเบอร์อีกครั้ง หรือรอ 2-3 นาทีแล้วลองใหม่</div>';
     el("statusBox").classList.remove("hidden");
   }
 
   function checkStatus() {
-    var phone = (el("checkPhone").value||"").trim();
+    var phone = (el("checkPhone").value || "").trim();
     var msg = el("msg4"); var btn = el("btnCheck");
-    el("statusBox").classList.add("hidden"); msg.className="msg"; msg.textContent="";
-    if (!phone) { msg.className="msg error"; msg.textContent="กรุณาใส่เบอร์โทรเพื่อค้นหา"; return; }
-    if (!isValidPhone(phone)) { msg.className="msg error"; msg.textContent="เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0"; return; }
+    el("statusBox").classList.add("hidden"); msg.className = "msg"; msg.textContent = "";
+    if (!phone) { msg.className = "msg error"; msg.textContent = "กรุณาใส่เบอร์โทรเพื่อค้นหา"; return; }
+    if (!isValidPhone(phone)) { msg.className = "msg error"; msg.textContent = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0"; return; }
 
-    /* iOS: เปิดแท็บใหม่ */
-    if (isIOS()) {
-      msg.className="msg ok"; msg.textContent="⏳ กำลังเปิดผลสถานะในแท็บใหม่...";
-      window.open(buildDirectStatusUrl(phone), "_blank");
+    /* iOS และ Firefox: ใช้ fetch() ดึงข้อมูลแสดงในหน้าเดิม */
+    if (isIOS() || isFirefox()) {
+      btn.disabled = true; btn.style.opacity = "0.65";
+      msg.className = "msg warn"; msg.textContent = "⏳ กำลังตรวจสอบ...";
+      var fetchUrl = WEB_APP_URL.replace(/\/exec$/, "/exec/status_json")
+        + "?token=" + encodeURIComponent(TOKEN)
+        + "&phone=" + encodeURIComponent(phone)
+        + "&t=" + Date.now();
+      fetch(fetchUrl)
+        .then(function(r) { return r.json(); })
+        .then(function(payload) {
+          btn.disabled = false; btn.style.opacity = "1"; msg.textContent = "";
+          if (payload && payload.ok) { renderStatus(payload.data); }
+          else if (payload && payload.notFound) { renderNotFound(phone); }
+          else { msg.className = "msg error"; msg.textContent = "❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง"; }
+          scrollToId("step4");
+        })
+        .catch(function() {
+          btn.disabled = false; btn.style.opacity = "1";
+          msg.className = "msg ok"; msg.textContent = "⏳ กำลังเปิดผลสถานะในแท็บใหม่...";
+          window.open(buildDirectStatusUrl(phone), "_blank");
+        });
       return;
     }
 
-    /* Chrome / Firefox / Edge / Samsung Browser: JSONP แสดงผลในหน้าเดิม */
-    btn.disabled=true; btn.style.opacity="0.65";
-    msg.className="msg warn"; msg.textContent="⏳ กำลังตรวจสอบ...";
-    var cbName = "__cb_status_" + Date.now() + "_" + Math.floor(Math.random()*100000);
+    /* Chrome/Edge/Samsung Browser: JSONP inline */
+    btn.disabled = true; btn.style.opacity = "0.65";
+    msg.className = "msg warn"; msg.textContent = "⏳ กำลังตรวจสอบ...";
+    var cbName = "__cb_status_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
     window[cbName] = function(payload) {
       try {
-        btn.disabled=false; btn.style.opacity="1"; msg.textContent="";
+        btn.disabled = false; btn.style.opacity = "1"; msg.textContent = "";
         if (payload && payload.ok) renderStatus(payload.data);
         else if (payload && payload.notFound) renderNotFound(phone);
-        else { msg.className="msg error"; msg.textContent="❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง"; }
+        else { msg.className = "msg error"; msg.textContent = "❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง"; }
         scrollToId("step4");
       } finally {
-        try { delete window[cbName]; } catch(e) { window[cbName]=undefined; }
+        try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
         var tag = document.getElementById(cbName); if (tag) tag.remove();
       }
     };
     var base = WEB_APP_URL.replace(/\/exec$/, "/exec/status_json");
     var url = base + "?token=" + encodeURIComponent(TOKEN) + "&phone=" + encodeURIComponent(phone) + "&callback=" + encodeURIComponent(cbName) + "&t=" + Date.now();
-    var s = document.createElement("script"); s.src=url; s.id=cbName;
+    var s = document.createElement("script"); s.src = url; s.id = cbName;
     s.onerror = function() {
-      btn.disabled=false; btn.style.opacity="1";
-      msg.className="msg error"; msg.textContent="❌ โหลดข้อมูลสถานะไม่สำเร็จ กรุณาลองอีกครั้ง";
-      try { delete window[cbName]; } catch(e) { window[cbName]=undefined; }
+      btn.disabled = false; btn.style.opacity = "1";
+      msg.className = "msg error"; msg.textContent = "❌ โหลดข้อมูลสถานะไม่สำเร็จ กรุณาลองอีกครั้ง";
+      try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
     };
     document.body.appendChild(s);
   }
 
+  /* ============================================================
+     ป้องกัน XSS
+  ============================================================ */
   function escapeHtml(s) {
-    return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 </script>
 
