@@ -96,6 +96,19 @@
 </head>
 <body>
 
+  <!-- CLOSED REGISTRATION SCREEN -->
+  <div id="closedBox" class="hidden" style="min-height:100vh;align-items:center;justify-content:center;padding:24px;background:#FFFDF7;">
+    <div style="max-width:560px;width:100%;background:#fff;border:1px solid #E5E7EB;border-radius:26px;padding:30px 22px;text-align:center;box-shadow:0 14px 38px rgba(17,24,39,.10);">
+      <div style="width:78px;height:78px;border-radius:24px;background:linear-gradient(145deg,#F7C948,#FFE9A3);display:grid;place-items:center;margin:0 auto 16px;font-size:42px;box-shadow:0 10px 24px rgba(247,201,72,.28);">⚠️</div>
+      <h1 style="margin:0 0 10px;font-size:30px;line-height:1.25;color:#111827;">ปิดรับลงทะเบียนแล้ว</h1>
+      <p id="closedMsg" style="margin:0;font-size:18px;line-height:1.75;color:#4B5563;font-weight:700;">ปิดรับลงทะเบียนล่วงหน้าแล้ว กรุณาติดต่อเจ้าหน้าที่หน้างาน</p>
+      <div style="margin-top:18px;padding:12px 14px;border-radius:16px;background:#FFF4CC;border:1px solid rgba(234,179,8,.25);color:#92400E;font-size:14px;font-weight:800;line-height:1.6;">
+        หากลงทะเบียนไว้แล้ว ยังสามารถตรวจสอบสถานะได้จากเจ้าหน้าที่หน้างาน
+      </div>
+    </div>
+  </div>
+
+
   <div class="topbar">
     <div class="topbar-inner">
       <div class="brand">
@@ -267,6 +280,48 @@
   var TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
 
   /* ============================================================
+     เช็คสถานะเปิด/ปิดลงทะเบียนจาก Apps Script
+     ถ้าปิด ระบบจะเปลี่ยนทั้งหน้าเป็นหน้าประกาศปิดรับทันที
+  ============================================================ */
+  function showClosedRegistration(message) {
+    var closedBox = document.getElementById("closedBox");
+    if (!closedBox) return;
+
+    document.body.innerHTML = closedBox.outerHTML;
+
+    var newClosedBox = document.getElementById("closedBox");
+    var closedMsg = document.getElementById("closedMsg");
+
+    if (closedMsg) {
+      closedMsg.textContent = message || "ปิดรับลงทะเบียนล่วงหน้าแล้ว กรุณาติดต่อเจ้าหน้าที่หน้างาน";
+    }
+
+    if (newClosedBox) {
+      newClosedBox.classList.remove("hidden");
+      newClosedBox.style.display = "flex";
+    }
+  }
+
+  async function checkRegistrationOpen() {
+    try {
+      var res = await fetch(WEB_APP_URL + "?action=registration_status&t=" + Date.now());
+      var data = await res.json();
+
+      if (data && data.ok && data.registration_open === false) {
+        showClosedRegistration(data.closed_message);
+        return false;
+      }
+
+      return true;
+    } catch (err) {
+      console.log("check registration status failed", err);
+      return true;
+    }
+  }
+
+  checkRegistrationOpen();
+
+  /* ============================================================
      ฟังก์ชันช่วยทั่วไป
   ============================================================ */
   function el(id) { return document.getElementById(id); }
@@ -392,7 +447,10 @@
     if (d.type === "submitResult") handleSubmitResult(d);
   });
 
-  function submitSlip() {
+  async function submitSlip() {
+    var open = await checkRegistrationOpen();
+    if (!open) return;
+
     var btn = el("btnSubmit"); var msg = el("msg3");
     msg.className = "msg"; msg.textContent = "";
     var file = el("slip").files && el("slip").files[0];
