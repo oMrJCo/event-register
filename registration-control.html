@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>เปิด/ปิด ลงทะเบียน</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f4f6;color:#111827}.wrap{max-width:560px;margin:0 auto;padding:18px 14px;min-height:100vh;display:flex;align-items:center}.card{width:100%;background:#fff;border-radius:22px;padding:20px 16px;box-shadow:0 10px 28px rgba(0,0,0,.06)}h1{margin:0 0 8px;font-size:28px;line-height:1.2}.sub{color:#6b7280;font-size:14px;line-height:1.5;margin-bottom:16px}.statusBox{border-radius:18px;padding:18px;text-align:center;margin-bottom:14px;font-weight:800}.open{background:#dcfce7;color:#166534}.closed{background:#fee2e2;color:#991b1b}.statusText{font-size:30px;margin-top:6px}.btnGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}button{min-height:54px;border:0;border-radius:14px;font-size:18px;font-weight:800;cursor:pointer}.openBtn{background:#16a34a;color:#fff}.closeBtn{background:#dc2626;color:#fff}.refreshBtn{margin-top:10px;width:100%;background:#111827;color:#fff}textarea{width:100%;min-height:92px;border:1px solid #d1d5db;border-radius:14px;padding:12px;font-size:15px;margin:12px 0;resize:vertical}.msg{margin-top:12px;min-height:22px;text-align:center;font-size:14px;font-weight:700}.ok{color:#137333}.err{color:#c62828}@media(max-width:460px){.btnGrid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>ควบคุมการลงทะเบียน</h1>
+      <div class="sub">ใช้เปิด/ปิดการส่งฟอร์มลงทะเบียนจากมือถือหรือ iPad ได้เลย</div>
+      <div id="statusBox" class="statusBox closed">
+        สถานะปัจจุบัน
+        <div id="statusText" class="statusText">กำลังโหลด...</div>
+      </div>
+      <label><b>ข้อความตอนปิดรับ</b></label>
+      <textarea id="closedMessage">ปิดรับลงทะเบียนแล้ว กรุณาติดต่อเจ้าหน้าที่หน้างาน</textarea>
+      <div class="btnGrid">
+        <button class="openBtn" id="openBtn">เปิดรับ</button>
+        <button class="closeBtn" id="closeBtn">ปิดรับ</button>
+      </div>
+      <button class="refreshBtn" id="refreshBtn">รีเฟรชสถานะ</button>
+      <div id="msg" class="msg"></div>
+    </div>
+  </div>
+<script>
+  const API_URL = "https://script.google.com/macros/s/AKfycbxZoooaEtBsLKUm3ppv-AIVipnC2w2WptAx5YHYwkfLZSTwIuMT7NRy0nHGZjY-AjSF/exec";
+  const STAFF_TOKEN = "LEEPLUS_CHECKIN_2026";
+  const statusBox = document.getElementById("statusBox");
+  const statusText = document.getElementById("statusText");
+  const closedMessage = document.getElementById("closedMessage");
+  const msg = document.getElementById("msg");
+  const openBtn = document.getElementById("openBtn");
+  const closeBtn = document.getElementById("closeBtn");
+  const refreshBtn = document.getElementById("refreshBtn");
+  function setMsg(t,type=""){msg.className="msg "+type;msg.textContent=t||""}
+  function render(open,message){statusBox.className="statusBox "+(open?"open":"closed");statusText.textContent=open?"เปิดรับอยู่":"ปิดรับแล้ว";if(message)closedMessage.value=message}
+  async function loadStatus(){try{setMsg("กำลังโหลด...");const r=await fetch(`${API_URL}?action=registration_settings`);const d=await r.json();if(!d.ok)throw new Error();render(!!d.registration_open,d.closed_message);setMsg("โหลดสถานะแล้ว","ok")}catch(e){setMsg("โหลดสถานะไม่สำเร็จ","err")}}
+  async function setOpen(open){try{openBtn.disabled=closeBtn.disabled=refreshBtn.disabled=true;setMsg("กำลังบันทึก...");const url=`${API_URL}?action=set_registration_open&open=${open?"TRUE":"FALSE"}&closed_message=${encodeURIComponent(closedMessage.value)}&staff_token=${encodeURIComponent(STAFF_TOKEN)}`;const r=await fetch(url);const d=await r.json();if(!d.ok){setMsg(d.message||"บันทึกไม่สำเร็จ","err");return}render(!!d.registration_open,d.closed_message);setMsg(d.message||"บันทึกแล้ว","ok")}catch(e){setMsg("เชื่อมต่อระบบไม่สำเร็จ","err")}finally{openBtn.disabled=closeBtn.disabled=refreshBtn.disabled=false}}
+  openBtn.onclick=()=>setOpen(true);closeBtn.onclick=()=>setOpen(false);refreshBtn.onclick=loadStatus;loadStatus();
+</script>
+</body>
+</html>
