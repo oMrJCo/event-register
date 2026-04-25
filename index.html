@@ -304,7 +304,7 @@
 
   async function checkRegistrationOpen() {
     try {
-      var res = await fetch(WEB_APP_URL + "?action=registration_status&t=" + Date.now());
+      var res = await fetch(WEB_APP_URL + "?action=registration_settings&t=" + Date.now());
       var data = await res.json();
 
       if (data && data.ok && data.registration_open === false) {
