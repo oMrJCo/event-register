@@ -284,22 +284,55 @@
      ถ้าปิด ระบบจะเปลี่ยนทั้งหน้าเป็นหน้าประกาศปิดรับทันที
   ============================================================ */
   function showClosedRegistration(message) {
-    var closedBox = document.getElementById("closedBox");
-    if (!closedBox) return;
+    document.body.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#FFFDF7;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1F2937;">
+        <div style="max-width:600px;width:100%;background:#fff;border:1px solid #E5E7EB;border-radius:26px;padding:30px 22px;text-align:center;box-shadow:0 14px 38px rgba(17,24,39,.10);">
 
-    document.body.innerHTML = closedBox.outerHTML;
+          <div style="width:78px;height:78px;border-radius:24px;background:linear-gradient(145deg,#F7C948,#FFE9A3);display:grid;place-items:center;margin:0 auto 16px;font-size:42px;box-shadow:0 10px 24px rgba(247,201,72,.28);">⚠️</div>
 
-    var newClosedBox = document.getElementById("closedBox");
-    var closedMsg = document.getElementById("closedMsg");
+          <h1 style="margin:0 0 10px;font-size:30px;line-height:1.25;color:#111827;">ปิดรับลงทะเบียนแล้ว</h1>
 
-    if (closedMsg) {
-      closedMsg.textContent = message || "ปิดรับลงทะเบียนล่วงหน้าแล้ว กรุณาติดต่อเจ้าหน้าที่หน้างาน";
-    }
+          <p style="margin:0;font-size:18px;line-height:1.75;color:#4B5563;font-weight:700;">
+            ${escapeHtml(message || "ปิดรับลงทะเบียนล่วงหน้าแล้ว กรุณาติดต่อเจ้าหน้าที่หน้างาน")}
+          </p>
 
-    if (newClosedBox) {
-      newClosedBox.classList.remove("hidden");
-      newClosedBox.style.display = "flex";
-    }
+          <div style="margin-top:18px;padding:12px 14px;border-radius:16px;background:#FFF4CC;border:1px solid rgba(234,179,8,.25);color:#92400E;font-size:14px;font-weight:800;line-height:1.6;">
+            หากลงทะเบียนไว้แล้ว สามารถตรวจสอบสถานะได้จากช่องด้านล่าง
+          </div>
+
+          <div style="margin-top:18px;text-align:left;">
+            <label style="display:block;font-size:13px;font-weight:900;color:#374151;margin-bottom:8px;">เบอร์โทรที่ใช้ลงทะเบียน</label>
+
+            <input 
+              id="closedCheckPhone" 
+              type="tel" 
+              inputmode="numeric" 
+              maxlength="10"
+              placeholder="เช่น 0812345678"
+              style="width:100%;padding:14px 14px;border:1px solid #E5E7EB;border-radius:16px;font-size:16px;outline:none;background:#fff;"
+              onkeydown="if(event.key === 'Enter'){ checkClosedStatus(); }"
+            />
+
+            <button 
+              type="button" 
+              onclick="checkClosedStatus()"
+              style="margin-top:12px;width:100%;border:0;border-radius:16px;padding:14px 16px;font-size:16px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,#F7C948,#FFE08A);color:#111827;box-shadow:0 10px 18px rgba(247,201,72,.28);"
+            >
+              🔍 ตรวจสอบสถานะของฉัน
+            </button>
+
+            <p id="closedStatusMsg" style="margin:10px 0 0;font-size:13px;font-weight:800;"></p>
+
+            <div id="closedStatusBox" style="display:none;margin-top:14px;border:1px solid #E5E7EB;border-radius:18px;background:#fff;padding:14px;"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    setTimeout(function() {
+      var inp = document.getElementById("closedCheckPhone");
+      if (inp) inp.focus();
+    }, 250);
   }
 
   async function checkRegistrationOpen() {
@@ -599,6 +632,137 @@
     s.onerror = function() {
       btn.disabled = false; btn.style.opacity = "1";
       msg.className = "msg error"; msg.textContent = "❌ โหลดข้อมูลสถานะไม่สำเร็จ กรุณาลองอีกครั้ง";
+      try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
+    };
+    document.body.appendChild(s);
+  }
+
+
+  function checkClosedStatus() {
+    var phoneEl = document.getElementById("closedCheckPhone");
+    var msg = document.getElementById("closedStatusMsg");
+    var box = document.getElementById("closedStatusBox");
+
+    var phone = phoneEl ? String(phoneEl.value || "").trim() : "";
+
+    if (box) {
+      box.style.display = "none";
+      box.innerHTML = "";
+    }
+
+    if (msg) {
+      msg.style.color = "#92400E";
+      msg.textContent = "";
+    }
+
+    if (!phone) {
+      if (msg) {
+        msg.style.color = "#B00020";
+        msg.textContent = "กรุณาใส่เบอร์โทร";
+      }
+      return;
+    }
+
+    if (!/^0[0-9]{9}$/.test(phone)) {
+      if (msg) {
+        msg.style.color = "#B00020";
+        msg.textContent = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0";
+      }
+      return;
+    }
+
+    if (msg) {
+      msg.style.color = "#92400E";
+      msg.textContent = "⏳ กำลังตรวจสอบ...";
+    }
+
+    var cbName = "__closed_status_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+
+    window[cbName] = function(payload) {
+      if (msg) msg.textContent = "";
+
+      if (payload && payload.ok) {
+        var d = payload.data || {};
+        var status = String(d.status || "pending").toLowerCase();
+
+        var statusText = "รอตรวจสอบ";
+        var color = "#92400E";
+        var bg = "#FFF4CC";
+        var dot = "#F59E0B";
+
+        if (status === "approved") {
+          statusText = "อนุมัติแล้ว";
+          color = "#166534";
+          bg = "#DCFCE7";
+          dot = "#22C55E";
+        } else if (status === "rejected") {
+          statusText = "ไม่ผ่าน";
+          color = "#991B1B";
+          bg = "#FEE2E2";
+          dot = "#EF4444";
+        }
+
+        if (box) {
+          box.innerHTML =
+            '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">' +
+              '<div style="font-weight:900;font-size:15px;">ผลการตรวจสอบสถานะ</div>' +
+              '<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:' + bg + ';color:' + color + ';font-weight:900;border:1px solid rgba(0,0,0,.06);">' +
+                '<span style="width:8px;height:8px;border-radius:999px;background:' + dot + ';display:inline-block;"></span>' +
+                statusText +
+              '</div>' +
+            '</div>' +
+            '<div style="margin-top:12px;display:grid;gap:8px;">' +
+              '<div style="border:1px solid #E5E7EB;border-radius:14px;padding:10px 12px;background:#fff;">' +
+                '<div style="font-size:12px;color:#6B7280;font-weight:800;">ชื่อ</div>' +
+                '<div style="margin-top:2px;font-size:15px;font-weight:900;word-break:break-word;">' + escapeHtml(d.fullname || "-") + '</div>' +
+              '</div>' +
+              '<div style="border:1px solid #E5E7EB;border-radius:14px;padding:10px 12px;background:#fff;">' +
+                '<div style="font-size:12px;color:#6B7280;font-weight:800;">เบอร์โทร</div>' +
+                '<div style="margin-top:2px;font-size:15px;font-weight:900;word-break:break-word;">' + escapeHtml(d.phone || "-") + '</div>' +
+              '</div>' +
+              '<div style="border:1px solid #E5E7EB;border-radius:14px;padding:10px 12px;background:#fff;">' +
+                '<div style="font-size:12px;color:#6B7280;font-weight:800;">เวลาลงทะเบียน</div>' +
+                '<div style="margin-top:2px;font-size:15px;font-weight:900;word-break:break-word;">' + escapeHtml(d.tsText || "-") + '</div>' +
+              '</div>' +
+            '</div>' +
+            '<div style="margin-top:10px;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;color:#92400E;background:linear-gradient(180deg,rgba(247,201,72,.22),rgba(255,244,204,.45));border:1px solid rgba(234,179,8,.18);">' +
+              escapeHtml(d.hint || 'ถ้าสถานะยัง “รอตรวจสอบ” กรุณารอเจ้าหน้าที่ตรวจสอบ') +
+            '</div>';
+
+          box.style.display = "block";
+        }
+
+      } else if (payload && payload.notFound) {
+        if (msg) {
+          msg.style.color = "#B00020";
+          msg.textContent = "ไม่พบข้อมูลของเบอร์นี้ กรุณาตรวจสอบเบอร์อีกครั้ง";
+        }
+      } else {
+        if (msg) {
+          msg.style.color = "#B00020";
+          msg.textContent = "ตรวจสอบไม่สำเร็จ กรุณาลองใหม่";
+        }
+      }
+
+      try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
+      var old = document.getElementById(cbName);
+      if (old) old.remove();
+    };
+
+    var url = WEB_APP_URL.replace(/\/exec$/, "/exec/status_json")
+      + "?token=" + encodeURIComponent(TOKEN)
+      + "&phone=" + encodeURIComponent(phone)
+      + "&callback=" + encodeURIComponent(cbName)
+      + "&t=" + Date.now();
+
+    var s = document.createElement("script");
+    s.src = url;
+    s.id = cbName;
+    s.onerror = function() {
+      if (msg) {
+        msg.style.color = "#B00020";
+        msg.textContent = "โหลดข้อมูลสถานะไม่สำเร็จ กรุณาลองอีกครั้ง";
+      }
       try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
     };
     document.body.appendChild(s);
