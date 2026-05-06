@@ -104,6 +104,11 @@ body{
   grid-template-columns:1fr 160px;
   gap:10px;
 }
+.moneyGrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
 .field{
   margin-top:10px;
 }
@@ -231,6 +236,23 @@ button:disabled{
   font-weight:700;
   line-height:1.55;
 }
+.moneyPillRow{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.moneyPill{
+  display:inline-flex;
+  align-items:center;
+  padding:7px 10px;
+  border-radius:999px;
+  background:#FFFBEB;
+  border:1px solid #FDE68A;
+  color:#92400E;
+  font-size:12px;
+  font-weight:1000;
+}
 .badge{
   display:inline-flex;
   align-items:center;
@@ -280,6 +302,8 @@ button:disabled{
   border-radius:24px;
   padding:18px;
   box-shadow:0 24px 70px rgba(0,0,0,.28);
+  max-height:92vh;
+  overflow:auto;
 }
 .modalTitle{
   font-size:20px;
@@ -300,7 +324,7 @@ button:disabled{
   color:#9CA3AF;
 }
 @media(max-width:620px){
-  .formGrid{grid-template-columns:1fr}
+  .formGrid,.moneyGrid{grid-template-columns:1fr}
   .eventTop{display:block}
   .btnRow button,.btnRow .linkBtn{width:100%}
 }
@@ -338,6 +362,17 @@ button:disabled{
     <div class="field">
       <label>วันที่จัดงาน</label>
       <input id="newEventDate" type="date">
+    </div>
+
+    <div class="moneyGrid">
+      <div class="field">
+        <label>ค่าลงทะเบียน / ราคาคอร์ส</label>
+        <input id="newCoursePrice" type="number" inputmode="numeric" min="0" placeholder="เช่น 1900">
+      </div>
+      <div class="field">
+        <label>เงินมัดจำ</label>
+        <input id="newDepositAmount" type="number" inputmode="numeric" min="0" placeholder="เช่น 1000" value="1000">
+      </div>
     </div>
 
     <div class="field">
@@ -383,6 +418,17 @@ button:disabled{
       <input id="editEventDate" type="date">
     </div>
 
+    <div class="moneyGrid">
+      <div class="field">
+        <label>ค่าลงทะเบียน / ราคาคอร์ส</label>
+        <input id="editCoursePrice" type="number" inputmode="numeric" min="0">
+      </div>
+      <div class="field">
+        <label>เงินมัดจำ</label>
+        <input id="editDepositAmount" type="number" inputmode="numeric" min="0">
+      </div>
+    </div>
+
     <div class="field">
       <label>สถานะ</label>
       <select id="editEventStatus">
@@ -416,6 +462,8 @@ const msgEl = document.getElementById("msg");
 const newEventNameEl = document.getElementById("newEventName");
 const newEventIdEl = document.getElementById("newEventId");
 const newEventDateEl = document.getElementById("newEventDate");
+const newCoursePriceEl = document.getElementById("newCoursePrice");
+const newDepositAmountEl = document.getElementById("newDepositAmount");
 const newEventNoteEl = document.getElementById("newEventNote");
 
 const createBtn = document.getElementById("createBtn");
@@ -425,6 +473,8 @@ const editModal = document.getElementById("editModal");
 const editEventIdText = document.getElementById("editEventIdText");
 const editEventNameEl = document.getElementById("editEventName");
 const editEventDateEl = document.getElementById("editEventDate");
+const editCoursePriceEl = document.getElementById("editCoursePrice");
+const editDepositAmountEl = document.getElementById("editDepositAmount");
 const editEventStatusEl = document.getElementById("editEventStatus");
 const editEventNoteEl = document.getElementById("editEventNote");
 const saveEditBtn = document.getElementById("saveEditBtn");
@@ -448,6 +498,12 @@ function escapeHtml(str){
     .replace(/'/g,"&#039;");
 }
 
+function moneyText(v){
+  const n = Number(String(v || "").replace(/[^0-9.]/g,""));
+  if (!n) return "-";
+  return n.toLocaleString("th-TH") + " บาท";
+}
+
 function statusBadge(status, isActive){
   if (isActive) return `<span class="badge badgeActive">● ACTIVE</span>`;
   if (status === "closed") return `<span class="badge badgeClosed">closed</span>`;
@@ -463,7 +519,8 @@ function normalizeEvent(item){
     prize_sheet: item.prize_sheet || item.prize_config_sheet || "",
     checkin_log_sheet: item.checkin_log_sheet || "",
     status: item.status || "",
-    deposit: item.deposit || "",
+    course_price: item.course_price || item.course_fee || item.price || "",
+    deposit_amount: item.deposit_amount || item.deposit || "",
     note: item.note || ""
   };
 }
@@ -473,7 +530,7 @@ function render(){
 
   if (active) {
     activeNameEl.textContent = `${active.event_name || "-"} (${active.event_id})`;
-    activeMetaEl.textContent = `Sheet: ${active.reg_sheet || "-"} · Prize: ${active.prize_sheet || "-"}`;
+    activeMetaEl.textContent = `Sheet: ${active.reg_sheet || "-"} · Prize: ${active.prize_sheet || "-"} · ค่าลงทะเบียน: ${moneyText(active.course_price)} · มัดจำ: ${moneyText(active.deposit_amount)}`;
   } else {
     activeNameEl.textContent = activeEventId ? activeEventId : "ยังไม่ได้ตั้ง Active Event";
     activeMetaEl.textContent = "เลือก Event แล้วกดตั้ง Active ก่อนใช้งานจริง";
@@ -486,7 +543,7 @@ function render(){
 
   eventListEl.innerHTML = events.map(e => {
     const isActive = e.event_id === activeEventId;
-    const canDelete = e.event_id !== "LEGACY" && !isActive;
+    const canDelete = e.event_id !== "LEGACY";
 
     return `
       <div class="eventCard ${isActive ? "active" : ""}">
@@ -496,6 +553,11 @@ function render(){
             <div class="eventId">${escapeHtml(e.event_id || "-")}</div>
           </div>
           <div>${statusBadge(e.status, isActive)}</div>
+        </div>
+
+        <div class="moneyPillRow">
+          <span class="moneyPill">ค่าลงทะเบียน: ${escapeHtml(moneyText(e.course_price))}</span>
+          <span class="moneyPill">มัดจำ: ${escapeHtml(moneyText(e.deposit_amount))}</span>
         </div>
 
         <div class="eventMeta">
@@ -515,18 +577,26 @@ function render(){
   }).join("");
 }
 
+async function fetchJson(url){
+  const res = await fetch(url, { cache:"no-store" });
+  const text = await res.text();
+  try{
+    return JSON.parse(text);
+  }catch(err){
+    throw new Error(text || "API ไม่ตอบ JSON");
+  }
+}
+
 async function loadEvents(){
   try{
     setMsg("กำลังโหลด...");
-    const res = await fetch(`${API_URL}?action=event_list&t=${Date.now()}`);
-    const data = await res.json();
+    const data = await fetchJson(`${API_URL}?action=event_list&t=${Date.now()}&rnd=${Math.random()}`);
 
     if(!data.ok) throw new Error(data.message || "load failed");
 
     activeEventId = data.active_event_id || "";
     events = (data.events || []).map(normalizeEvent);
 
-    // แนะนำรหัสถัดไปบนหน้า ถ้า API ส่งมา
     if (data.next_event_id && !newEventIdEl.value.trim()) {
       newEventIdEl.placeholder = "Auto: " + data.next_event_id;
     }
@@ -535,7 +605,7 @@ async function loadEvents(){
     setMsg("โหลดข้อมูลแล้ว", "ok");
   }catch(err){
     eventListEl.innerHTML = `<div class="eventCard">โหลดข้อมูลไม่สำเร็จ</div>`;
-    setMsg("โหลดข้อมูลไม่สำเร็จ", "err");
+    setMsg(err.message || "โหลดข้อมูลไม่สำเร็จ", "err");
   }
 }
 
@@ -543,6 +613,8 @@ async function createEvent(){
   const name = newEventNameEl.value.trim();
   const manualId = newEventIdEl.value.trim().toUpperCase();
   const date = newEventDateEl.value.trim();
+  const coursePrice = newCoursePriceEl.value.trim();
+  const depositAmount = newDepositAmountEl.value.trim();
   const note = newEventNoteEl.value.trim();
 
   if(!name){
@@ -560,12 +632,15 @@ async function createEvent(){
       `&event_name=${encodeURIComponent(name)}` +
       `&event_id=${encodeURIComponent(manualId)}` +
       `&event_date=${encodeURIComponent(date)}` +
+      `&course_price=${encodeURIComponent(coursePrice)}` +
+      `&course_fee=${encodeURIComponent(coursePrice)}` +
+      `&deposit_amount=${encodeURIComponent(depositAmount)}` +
+      `&deposit=${encodeURIComponent(depositAmount)}` +
       `&note=${encodeURIComponent(note)}` +
       `&staff_token=${encodeURIComponent(STAFF_TOKEN)}` +
       `&t=${Date.now()}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJson(url);
 
     if(!data.ok){
       setMsg(data.message || "สร้าง Event ไม่สำเร็จ", "err");
@@ -575,12 +650,14 @@ async function createEvent(){
     newEventNameEl.value = "";
     newEventIdEl.value = "";
     newEventDateEl.value = "";
+    newCoursePriceEl.value = "";
+    newDepositAmountEl.value = "1000";
     newEventNoteEl.value = "";
 
     setMsg(data.message || "สร้าง Event แล้ว", "ok");
     await loadEvents();
   }catch(err){
-    setMsg("เชื่อมต่อระบบไม่สำเร็จ", "err");
+    setMsg(err.message || "เชื่อมต่อระบบไม่สำเร็จ", "err");
   }finally{
     createBtn.disabled = false;
   }
@@ -597,18 +674,19 @@ async function setActive(eventId){
       `&staff_token=${encodeURIComponent(STAFF_TOKEN)}` +
       `&t=${Date.now()}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJson(url);
 
     if(!data.ok){
       setMsg(data.message || "ตั้ง Active ไม่สำเร็จ", "err");
       return;
     }
 
+    activeEventId = eventId;
+    render();
     setMsg("ตั้ง Active Event แล้ว", "ok");
     await loadEvents();
   }catch(err){
-    setMsg("เชื่อมต่อระบบไม่สำเร็จ", "err");
+    setMsg(err.message || "เชื่อมต่อระบบไม่สำเร็จ", "err");
   }
 }
 
@@ -620,6 +698,8 @@ function openEdit(eventId){
   editEventIdText.textContent = `รหัส Event: ${eventId}`;
   editEventNameEl.value = e.event_name || "";
   editEventDateEl.value = e.event_date || "";
+  editCoursePriceEl.value = e.course_price || "";
+  editDepositAmountEl.value = e.deposit_amount || "";
   editEventStatusEl.value = e.status || "active";
   editEventNoteEl.value = e.note || "";
   editModal.classList.add("show");
@@ -641,18 +721,24 @@ async function saveEdit(){
 
   try{
     saveEditBtn.disabled = true;
+    const coursePrice = editCoursePriceEl.value.trim();
+    const depositAmount = editDepositAmountEl.value.trim();
+
     const url =
       `${API_URL}?action=event_update` +
       `&event_id=${encodeURIComponent(editingEventId)}` +
       `&event_name=${encodeURIComponent(name)}` +
       `&event_date=${encodeURIComponent(editEventDateEl.value.trim())}` +
+      `&course_price=${encodeURIComponent(coursePrice)}` +
+      `&course_fee=${encodeURIComponent(coursePrice)}` +
+      `&deposit_amount=${encodeURIComponent(depositAmount)}` +
+      `&deposit=${encodeURIComponent(depositAmount)}` +
       `&status=${encodeURIComponent(editEventStatusEl.value.trim())}` +
       `&note=${encodeURIComponent(editEventNoteEl.value.trim())}` +
       `&staff_token=${encodeURIComponent(STAFF_TOKEN)}` +
       `&t=${Date.now()}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJson(url);
 
     if(!data.ok){
       alert(data.message || "บันทึกไม่สำเร็จ");
@@ -663,7 +749,7 @@ async function saveEdit(){
     setMsg("แก้ไข Event แล้ว", "ok");
     await loadEvents();
   }catch(err){
-    alert("เชื่อมต่อระบบไม่สำเร็จ");
+    alert(err.message || "เชื่อมต่อระบบไม่สำเร็จ");
   }finally{
     saveEditBtn.disabled = false;
   }
@@ -673,14 +759,18 @@ async function deleteEvent(eventId){
   const e = events.find(x => x.event_id === eventId);
   if(!e) return;
 
-  if(eventId === activeEventId){
-    alert("ลบ Event ที่กำลัง Active ไม่ได้ กรุณาตั้ง Active เป็นงานอื่นก่อน");
+  if(eventId === "LEGACY"){
+    alert("ลบ LEGACY ไม่ได้");
     return;
   }
 
+  const activeWarn = eventId === activeEventId
+    ? "\n\nหมายเหตุ: งานนี้เป็น Active Event ถ้าลบ ระบบจะสลับ Active ไปงานอื่นอัตโนมัติ"
+    : "";
+
   const text =
     `ต้องการลบ Event นี้ใช่ไหม?\n\n` +
-    `${e.event_name} (${e.event_id})\n\n` +
+    `${e.event_name} (${e.event_id})${activeWarn}\n\n` +
     `ระบบจะลบ sheet ของงานนี้ด้วย:\n` +
     `- ${e.reg_sheet}\n- ${e.prize_sheet}\n- ${e.checkin_log_sheet}`;
 
@@ -688,6 +778,9 @@ async function deleteEvent(eventId){
 
   try{
     setMsg("กำลังลบ Event...");
+
+    eventListEl.innerHTML = `<div class="eventCard">กำลังลบ และโหลดข้อมูลใหม่...</div>`;
+
     const url =
       `${API_URL}?action=event_delete` +
       `&event_id=${encodeURIComponent(eventId)}` +
@@ -695,18 +788,25 @@ async function deleteEvent(eventId){
       `&staff_token=${encodeURIComponent(STAFF_TOKEN)}` +
       `&t=${Date.now()}`;
 
-    const res = await fetch(url);
-    const data = await res.json();
+    const data = await fetchJson(url);
 
     if(!data.ok){
       setMsg(data.message || "ลบ Event ไม่สำเร็จ", "err");
+      await loadEvents();
       return;
     }
 
-    setMsg("ลบ Event แล้ว", "ok");
+    events = events.filter(x => x.event_id !== eventId);
+    if (data.active_event_id !== undefined) activeEventId = data.active_event_id || "";
+    if (activeEventId === eventId) activeEventId = "";
+    render();
+
+    setMsg("ลบ Event แล้ว กำลังอัพเดทรายการ...", "ok");
+    await new Promise(resolve => setTimeout(resolve, 450));
     await loadEvents();
   }catch(err){
-    setMsg("เชื่อมต่อระบบไม่สำเร็จ", "err");
+    setMsg(err.message || "เชื่อมต่อระบบไม่สำเร็จ", "err");
+    await loadEvents();
   }
 }
 
