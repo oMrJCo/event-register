@@ -36,6 +36,10 @@
     .hero{margin:0 0 10px;padding:14px;border-radius:var(--radius);background:linear-gradient(180deg,rgba(247,201,72,.22),rgba(255,244,204,.45));border:1px solid rgba(234,179,8,.18)}
     .hero h1{margin:0 0 6px;font-size:18px;letter-spacing:.2px}
     .hero p{margin:0;font-size:13px;color:var(--muted)}
+    .money-info{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .money-card{background:#fff;border:1px solid rgba(234,179,8,.28);border-radius:14px;padding:10px}
+    .money-card small{display:block;font-size:11px;font-weight:900;color:#92400E}
+    .money-card b{display:block;margin-top:4px;font-size:16px;font-weight:1000;color:#111827}
     .grid{display:grid;gap:12px}
     .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
     .card-head{padding:14px 14px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(229,231,235,.7);background:linear-gradient(180deg,rgba(255,244,204,.45),rgba(255,255,255,.75))}
@@ -46,9 +50,9 @@
     .field{margin:10px 0}
     label{display:block;font-size:12px;color:#374151;margin:0 0 6px;font-weight:800}
     .req{color:#B45309;font-weight:900}
-    input[type="text"],input[type="tel"],input:not([type]){width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:14px;font-size:15px;outline:none;background:#fff;transition:border .15s ease,box-shadow .15s ease}
-    input[type="text"]:focus,input[type="tel"]:focus,input:not([type]):focus{border-color:rgba(234,179,8,.55);box-shadow:0 0 0 4px rgba(247,201,72,.25)}
-    input.error-field{border-color:#EF4444 !important;box-shadow:0 0 0 4px rgba(239,68,68,.15) !important}
+    input[type="text"],input[type="tel"],input:not([type]),select{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:14px;font-size:15px;outline:none;background:#fff;transition:border .15s ease,box-shadow .15s ease}
+    input[type="text"]:focus,input[type="tel"]:focus,input:not([type]):focus,select:focus{border-color:rgba(234,179,8,.55);box-shadow:0 0 0 4px rgba(247,201,72,.25)}
+    input.error-field,select.error-field{border-color:#EF4444 !important;box-shadow:0 0 0 4px rgba(239,68,68,.15) !important}
     .help{margin-top:6px;font-size:12px;color:var(--muted)}
     .field-error{margin-top:5px;font-size:12px;color:#B00020;font-weight:800;display:none}
     .field-error.show{display:block}
@@ -80,34 +84,18 @@
     .srow{border:1px solid rgba(229,231,235,.85);border-radius:14px;padding:10px 12px;background:#fff}
     .k{font-size:12px;color:var(--muted);font-weight:800}
     .v{margin-top:2px;font-size:14px;font-weight:900;word-break:break-word}
-    .hint{margin-top:10px;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;color:#92400E;
-      background:linear-gradient(180deg,rgba(247,201,72,.22),rgba(255,244,204,.45));
-      border:1px solid rgba(234,179,8,.18);}
-    .already-reg{display:flex;align-items:center;justify-content:space-between;gap:10px;
-      padding:12px 14px;border-radius:var(--radius);background:#fff;
-      border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:10px;flex-wrap:wrap}
+    .hint{margin-top:10px;border-radius:14px;padding:10px 12px;font-size:12px;font-weight:800;color:#92400E;background:linear-gradient(180deg,rgba(247,201,72,.22),rgba(255,244,204,.45));border:1px solid rgba(234,179,8,.18);}
+    .already-reg{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:var(--radius);background:#fff;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:10px;flex-wrap:wrap}
     .already-reg span{font-size:13px;color:var(--muted);font-weight:700}
-    .already-reg button{width:auto;padding:10px 16px;font-size:13px;font-weight:900;
-      background:linear-gradient(180deg,var(--yellow),#FFE08A);color:#111827;
-      border:0;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(247,201,72,.3);
-      white-space:nowrap}
+    .already-reg button{width:auto;padding:10px 16px;font-size:13px;font-weight:900;background:linear-gradient(180deg,var(--yellow),#FFE08A);color:#111827;border:0;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(247,201,72,.3);white-space:nowrap}
     .already-reg button:active{transform:translateY(1px)}
+    @media(max-width:620px){
+      .money-info{grid-template-columns:1fr}
+      .badge{display:none}
+    }
   </style>
 </head>
 <body>
-
-  <!-- CLOSED REGISTRATION SCREEN -->
-  <div id="closedBox" class="hidden" style="min-height:100vh;align-items:center;justify-content:center;padding:24px;background:#FFFDF7;">
-    <div style="max-width:560px;width:100%;background:#fff;border:1px solid #E5E7EB;border-radius:26px;padding:30px 22px;text-align:center;box-shadow:0 14px 38px rgba(17,24,39,.10);">
-      <div style="width:78px;height:78px;border-radius:24px;background:linear-gradient(145deg,#F7C948,#FFE9A3);display:grid;place-items:center;margin:0 auto 16px;font-size:42px;box-shadow:0 10px 24px rgba(247,201,72,.28);">⚠️</div>
-      <h1 style="margin:0 0 10px;font-size:30px;line-height:1.25;color:#111827;">ปิดรับลงทะเบียนแล้ว</h1>
-      <p id="closedMsg" style="margin:0;font-size:18px;line-height:1.75;color:#4B5563;font-weight:700;">ปิดรับลงทะเบียนล่วงหน้าแล้ว กรุณาติดต่อเจ้าหน้าที่หน้างาน</p>
-      <div style="margin-top:18px;padding:12px 14px;border-radius:16px;background:#FFF4CC;border:1px solid rgba(234,179,8,.25);color:#92400E;font-size:14px;font-weight:800;line-height:1.6;">
-        หากลงทะเบียนไว้แล้ว ยังสามารถตรวจสอบสถานะได้จากเจ้าหน้าที่หน้างาน
-      </div>
-    </div>
-  </div>
-
 
   <div class="topbar">
     <div class="topbar-inner">
@@ -118,7 +106,7 @@
           <span>กรอกข้อมูล • โอน • แนบสลิป</span>
         </div>
       </div>
-      <div class="badge">คอร์ส Back To Basic By Leeplus &amp; Hi-Pro Thailand</div>
+      <div class="badge" id="eventBadge">คอร์ส Back To Basic By Leeplus &amp; Hi-Pro Thailand</div>
     </div>
   </div>
 
@@ -150,13 +138,27 @@
     </div>
 
     <div class="hero">
-      <h1>ลงทะเบียนเพื่อบันทึกรายชื่อ</h1>
-      <p>กรอกข้อมูลให้ครบ → โอนมัดจำ → แนบสลิป → ส่ง ระบบจะบันทึกให้อัตโนมัติ</p>
+      <h1 id="heroTitle">ลงทะเบียนเพื่อบันทึกรายชื่อ</h1>
+      <p id="heroSub">กรอกข้อมูลให้ครบ → โอนมัดจำ → แนบสลิป → ส่ง ระบบจะบันทึกให้อัตโนมัติ</p>
+
+      <div class="money-info">
+        <div class="money-card">
+          <small>ค่าลงทะเบียน</small>
+          <b id="coursePriceText">฿1,900</b>
+        </div>
+        <div class="money-card">
+          <small>มัดจำ</small>
+          <b id="depositAmountText">฿1,000</b>
+        </div>
+        <div class="money-card">
+          <small>คงเหลือ</small>
+          <b id="balanceText">฿900</b>
+        </div>
+      </div>
     </div>
 
     <div class="grid">
 
-      <!-- STEP 1 -->
       <section class="card" id="step1">
         <div class="card-head">
           <div>
@@ -171,22 +173,43 @@
             <input type="text" id="fullname" placeholder="เช่น สมชาย ใจดี" autocomplete="name" />
             <div class="field-error" id="err-fullname">กรุณากรอกชื่อ-สกุล</div>
           </div>
+
           <div class="field">
             <label for="phone">เบอร์โทร <span class="req">*</span></label>
             <input type="tel" id="phone" inputmode="numeric" placeholder="เช่น 0812345678" autocomplete="tel" maxlength="10" />
-            <div class="help">กรอกตัวเลข 10 หลัก (เช่น 0812345678)</div>
+            <div class="help">กรอกตัวเลข 10 หลัก เช่น 0812345678</div>
             <div class="field-error" id="err-phone">เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0</div>
           </div>
+
           <div class="field">
             <label for="facebook">ชื่อ Facebook <span class="req">*</span></label>
             <input type="text" id="facebook" placeholder="เช่น Somchai Jaidee" />
             <div class="field-error" id="err-facebook">กรุณากรอกชื่อ Facebook</div>
           </div>
+
           <div class="field">
             <label for="lineId">ID Line <span class="req">*</span></label>
             <input type="text" id="lineId" placeholder="เช่น somchai123" />
             <div class="field-error" id="err-lineId">กรุณากรอก ID Line</div>
           </div>
+
+          <div class="field">
+            <label for="shirtSize">ไซส์เสื้อ <span class="req">*</span></label>
+            <select id="shirtSize">
+              <option value="">เลือกไซส์เสื้อ</option>
+              <option value="S">S</option>
+              <option value="M">M</option>
+              <option value="L">L</option>
+              <option value="XL">XL</option>
+              <option value="2XL">2XL</option>
+              <option value="3XL">3XL</option>
+              <option value="4XL">4XL</option>
+              <option value="5XL">5XL</option>
+              <option value="FREE">FREE SIZE</option>
+            </select>
+            <div class="field-error" id="err-shirtSize">กรุณาเลือกไซส์เสื้อ</div>
+          </div>
+
           <div class="btnrow">
             <button class="btn-primary" type="button" onclick="goStep2()">ยืนยันข้อมูล →</button>
           </div>
@@ -194,11 +217,10 @@
         </div>
       </section>
 
-      <!-- STEP 2 -->
       <section class="card hidden" id="step2">
         <div class="card-head">
           <div>
-            <h3 class="card-title">2) โอนมัดจำ ฿1,000</h3>
+            <h3 class="card-title" id="step2Title">2) โอนมัดจำ ฿1,000</h3>
             <p class="card-sub">สแกน QR เพื่อโอนเงิน แล้วกดไปแนบสลิป</p>
           </div>
           <div class="step">STEP 2/3</div>
@@ -207,7 +229,7 @@
           <div class="qr-wrap">
             <img class="qr-img" src="qr-card.png" alt="QR Code สำหรับโอนเงิน" />
           </div>
-          <div class="notice">✅ โอนแล้ว กด "ไปแนบสลิป" เพื่อยืนยันสิทธิ์</div>
+          <div class="notice" id="depositNotice">✅ โอนมัดจำแล้ว กด "ไปแนบสลิป" เพื่อยืนยันสิทธิ์</div>
           <div class="btnrow">
             <button class="btn-primary" type="button" onclick="goStep3()">ไปแนบสลิป →</button>
             <button class="btn-ghost" type="button" onclick="scrollToId('step1')">← กลับไปแก้ข้อมูล</button>
@@ -215,19 +237,18 @@
         </div>
       </section>
 
-      <!-- STEP 3 -->
       <section class="card hidden" id="step3">
         <div class="card-head">
           <div>
             <h3 class="card-title">3) แนบสลิป</h3>
-            <p class="card-sub">รองรับ JPG / PNG / PDF (ไม่เกิน 5MB)</p>
+            <p class="card-sub">รองรับ JPG / PNG / PDF ไม่เกิน 5MB</p>
           </div>
           <div class="step">STEP 3/3</div>
         </div>
         <div class="card-body">
           <div class="upload-box">
             <b>ไฟล์สลิป <span class="req">*</span></b>
-            <div class="help">แตะเพื่อเลือกไฟล์ (มือถือ) หรือเลือกจากเครื่อง</div>
+            <div class="help">แตะเพื่อเลือกไฟล์มือถือ หรือเลือกจากเครื่อง</div>
             <div class="file-row">
               <input id="slip" type="file" accept="image/*,application/pdf" style="flex:1 1 240px;min-width:220px" onchange="onFilePicked()" />
               <div id="fileNamePill" class="file-pill">ยังไม่ได้เลือกไฟล์</div>
@@ -241,7 +262,6 @@
         </div>
       </section>
 
-      <!-- STATUS -->
       <section class="card hidden" id="step4">
         <div class="card-head">
           <div>
@@ -273,91 +293,143 @@
   <iframe id="hidden_iframe" name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
-  /* ============================================================
-     ตั้งค่า — แก้ WEB_APP_URL และ TOKEN ให้ตรงกับ Google Apps Script ของคุณ
-  ============================================================ */
   var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxZoooaEtBsLKUm3ppv-AIVipnC2w2WptAx5YHYwkfLZSTwIuMT7NRy0nHGZjY-AjSF/exec";
   var TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
 
-  /* ============================================================
-     เช็คสถานะเปิด/ปิดลงทะเบียนจาก Apps Script
-     ถ้าปิด ระบบจะเปลี่ยนทั้งหน้าเป็นหน้าประกาศปิดรับทันที
-  ============================================================ */
+  var ACTIVE_EVENT = null;
+  var ACTIVE_COURSE_PRICE = 1900;
+  var ACTIVE_DEPOSIT_AMOUNT = 1000;
+
+  function el(id) { return document.getElementById(id); }
+
+  function escapeHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function moneyNumber(v){
+    var n = Number(String(v || "0").replace(/[^0-9.-]/g,""));
+    return isNaN(n) ? 0 : n;
+  }
+
+  function moneyText(v){
+    var n = moneyNumber(v);
+    if (!n) return "-";
+    return "฿" + n.toLocaleString("th-TH");
+  }
+
+  async function apiGet(params){
+    var url = WEB_APP_URL + "?" + new URLSearchParams(Object.assign({}, params, { t: Date.now() })).toString();
+    var res = await fetch(url);
+    var text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch(err) {
+      throw new Error("API ไม่ได้ตอบกลับเป็น JSON: " + text.slice(0, 80));
+    }
+  }
+
+  function normalizeEvent(ev){
+    ev = ev || {};
+    return {
+      event_id: ev.event_id || "",
+      event_name: ev.event_name || "",
+      event_date: ev.event_date || "",
+      course_price: ev.course_price || ev.coursePrice || ev.price || ev.course_fee || "",
+      deposit_amount: ev.deposit_amount || ev.depositAmount || ev.deposit || ""
+    };
+  }
+
+  function renderActiveEventMoney(){
+    var course = moneyNumber(ACTIVE_COURSE_PRICE);
+    var deposit = moneyNumber(ACTIVE_DEPOSIT_AMOUNT);
+    var balance = Math.max(0, course - deposit);
+
+    if (el("coursePriceText")) el("coursePriceText").textContent = moneyText(course);
+    if (el("depositAmountText")) el("depositAmountText").textContent = moneyText(deposit);
+    if (el("balanceText")) el("balanceText").textContent = course ? moneyText(balance) : "-";
+
+    if (el("step2Title")) el("step2Title").textContent = "2) โอนมัดจำ " + moneyText(deposit);
+    if (el("depositNotice")) el("depositNotice").textContent = "✅ โอนมัดจำ " + moneyText(deposit) + " แล้ว กด \"ไปแนบสลิป\" เพื่อยืนยันสิทธิ์";
+
+    if (ACTIVE_EVENT && ACTIVE_EVENT.event_name) {
+      if (el("eventBadge")) el("eventBadge").textContent = ACTIVE_EVENT.event_name;
+      if (el("heroTitle")) el("heroTitle").textContent = ACTIVE_EVENT.event_name;
+    }
+  }
+
+  async function loadActiveEventInfo(){
+    try {
+      var data = await apiGet({ action:"event_list" });
+      if (!data || !data.ok) return;
+
+      var events = (data.events || []).map(normalizeEvent);
+      var activeId = data.active_event_id || "";
+      var active = events.find(function(e){ return e.event_id === activeId; }) || events[0] || null;
+
+      if (!active) return;
+
+      ACTIVE_EVENT = active;
+
+      var course = moneyNumber(active.course_price);
+      var deposit = moneyNumber(active.deposit_amount);
+
+      if (course) ACTIVE_COURSE_PRICE = course;
+      if (deposit) ACTIVE_DEPOSIT_AMOUNT = deposit;
+
+      renderActiveEventMoney();
+    } catch(err) {
+      console.log("load active event failed", err);
+      renderActiveEventMoney();
+    }
+  }
+
   function showClosedRegistration(message) {
     document.body.innerHTML = `
       <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:#FFFDF7;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1F2937;">
         <div style="max-width:600px;width:100%;background:#fff;border:1px solid #E5E7EB;border-radius:26px;padding:30px 22px;text-align:center;box-shadow:0 14px 38px rgba(17,24,39,.10);">
-
           <div style="width:78px;height:78px;border-radius:24px;background:linear-gradient(145deg,#F7C948,#FFE9A3);display:grid;place-items:center;margin:0 auto 16px;font-size:42px;box-shadow:0 10px 24px rgba(247,201,72,.28);">⚠️</div>
-
           <h1 style="margin:0 0 10px;font-size:30px;line-height:1.25;color:#111827;">ปิดรับลงทะเบียนแล้ว</h1>
-
           <p style="margin:0;font-size:18px;line-height:1.75;color:#4B5563;font-weight:700;">
             ${escapeHtml(message || "ปิดรับลงทะเบียนล่วงหน้าแล้ว กรุณาติดต่อเจ้าหน้าที่หน้างาน")}
           </p>
-
           <div style="margin-top:18px;padding:12px 14px;border-radius:16px;background:#FFF4CC;border:1px solid rgba(234,179,8,.25);color:#92400E;font-size:14px;font-weight:800;line-height:1.6;">
             หากลงทะเบียนไว้แล้ว สามารถตรวจสอบสถานะได้จากช่องด้านล่าง
           </div>
-
           <div style="margin-top:18px;text-align:left;">
             <label style="display:block;font-size:13px;font-weight:900;color:#374151;margin-bottom:8px;">เบอร์โทรที่ใช้ลงทะเบียน</label>
-
-            <input 
-              id="closedCheckPhone" 
-              type="tel" 
-              inputmode="numeric" 
-              maxlength="10"
-              placeholder="เช่น 0812345678"
+            <input id="closedCheckPhone" type="tel" inputmode="numeric" maxlength="10" placeholder="เช่น 0812345678"
               style="width:100%;padding:14px 14px;border:1px solid #E5E7EB;border-radius:16px;font-size:16px;outline:none;background:#fff;"
-              onkeydown="if(event.key === 'Enter'){ checkClosedStatus(); }"
-            />
-
-            <button 
-              type="button" 
-              onclick="checkClosedStatus()"
-              style="margin-top:12px;width:100%;border:0;border-radius:16px;padding:14px 16px;font-size:16px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,#F7C948,#FFE08A);color:#111827;box-shadow:0 10px 18px rgba(247,201,72,.28);"
-            >
+              onkeydown="if(event.key === 'Enter'){ checkClosedStatus(); }" />
+            <button type="button" onclick="checkClosedStatus()"
+              style="margin-top:12px;width:100%;border:0;border-radius:16px;padding:14px 16px;font-size:16px;font-weight:900;cursor:pointer;background:linear-gradient(180deg,#F7C948,#FFE08A);color:#111827;box-shadow:0 10px 18px rgba(247,201,72,.28);">
               🔍 ตรวจสอบสถานะของฉัน
             </button>
-
             <p id="closedStatusMsg" style="margin:10px 0 0;font-size:13px;font-weight:800;"></p>
-
             <div id="closedStatusBox" style="display:none;margin-top:14px;border:1px solid #E5E7EB;border-radius:18px;background:#fff;padding:14px;"></div>
           </div>
         </div>
       </div>
     `;
-
-    setTimeout(function() {
-      var inp = document.getElementById("closedCheckPhone");
-      if (inp) inp.focus();
-    }, 250);
   }
 
   async function checkRegistrationOpen() {
     try {
-      var res = await fetch(WEB_APP_URL + "?action=registration_settings&t=" + Date.now());
-      var data = await res.json();
-
+      var data = await apiGet({ action:"registration_settings" });
       if (data && data.ok && data.registration_open === false) {
         showClosedRegistration(data.closed_message);
         return false;
       }
-
       return true;
     } catch (err) {
       console.log("check registration status failed", err);
       return true;
     }
   }
-
-  checkRegistrationOpen();
-
-  /* ============================================================
-     ฟังก์ชันช่วยทั่วไป
-  ============================================================ */
-  function el(id) { return document.getElementById(id); }
 
   function scrollToId(id) {
     var node = el(id);
@@ -384,9 +456,6 @@
     }, 400);
   }
 
-  /* ============================================================
-     Progress Bar
-  ============================================================ */
   function setProgress(step) {
     var labels = {
       1: "ขั้นตอนที่ 1 จาก 3 — กรอกข้อมูล",
@@ -395,23 +464,35 @@
     };
     var labelEl = el("progressLabel");
     if (labelEl) labelEl.textContent = labels[step] || labels[1];
+
     for (var i = 1; i <= 3; i++) {
-      var dot = el("pd" + i); var txt = el("pt" + i);
+      var dot = el("pd" + i);
+      var txt = el("pt" + i);
       if (!dot || !txt) continue;
-      dot.classList.remove("active", "done"); txt.classList.remove("active", "done");
-      if (i < step) { dot.classList.add("done"); dot.textContent = "✓"; txt.classList.add("done"); }
-      else if (i === step) { dot.classList.add("active"); txt.classList.add("active"); }
+      dot.classList.remove("active", "done");
+      txt.classList.remove("active", "done");
+
+      if (i < step) {
+        dot.classList.add("done");
+        dot.textContent = "✓";
+        txt.classList.add("done");
+      } else if (i === step) {
+        dot.classList.add("active");
+        dot.textContent = String(i);
+        txt.classList.add("active");
+      } else {
+        dot.textContent = String(i);
+      }
     }
+
     for (var j = 1; j <= 2; j++) {
       var line = el("pl" + j);
       if (!line) continue;
-      if (j < step) line.classList.add("done"); else line.classList.remove("done");
+      if (j < step) line.classList.add("done");
+      else line.classList.remove("done");
     }
   }
 
-  /* ============================================================
-     Validation
-  ============================================================ */
   function isValidPhone(phone) {
     var cleaned = phone.replace(/[\s\-]/g, "");
     return /^0[0-9]{9}$/.test(cleaned);
@@ -420,44 +501,51 @@
   function markField(fieldId, isError) {
     var inputEl = el(fieldId);
     var errEl = el("err-" + fieldId);
-    if (inputEl) { if (isError) inputEl.classList.add("error-field"); else inputEl.classList.remove("error-field"); }
-    if (errEl) { if (isError) errEl.classList.add("show"); else errEl.classList.remove("show"); }
+    if (inputEl) {
+      if (isError) inputEl.classList.add("error-field");
+      else inputEl.classList.remove("error-field");
+    }
+    if (errEl) {
+      if (isError) errEl.classList.add("show");
+      else errEl.classList.remove("show");
+    }
   }
 
-  var watchFields = ["fullname", "phone", "facebook", "lineId"];
+  var watchFields = ["fullname", "phone", "facebook", "lineId", "shirtSize"];
   for (var fi = 0; fi < watchFields.length; fi++) {
     (function(fid) {
       var inputEl = el(fid);
       if (inputEl) inputEl.addEventListener("input", function() { markField(fid, false); });
+      if (inputEl) inputEl.addEventListener("change", function() { markField(fid, false); });
     })(watchFields[fi]);
   }
 
-  /* ============================================================
-     STEP 1 → 2
-  ============================================================ */
   function goStep2() {
     var fullname = el("fullname").value.trim();
-    var phone    = el("phone").value.trim();
+    var phone = el("phone").value.trim();
     var facebook = el("facebook").value.trim();
-    var lineId   = el("lineId").value.trim();
+    var lineId = el("lineId").value.trim();
+    var shirtSize = el("shirtSize").value.trim();
+
     var hasError = false;
-    if (!fullname)            { markField("fullname", true);  hasError = true; } else { markField("fullname", false); }
-    if (!isValidPhone(phone)) { markField("phone", true);     hasError = true; } else { markField("phone", false); }
-    if (!facebook)            { markField("facebook", true);  hasError = true; } else { markField("facebook", false); }
-    if (!lineId)              { markField("lineId", true);    hasError = true; } else { markField("lineId", false); }
+
+    if (!fullname) { markField("fullname", true); hasError = true; } else { markField("fullname", false); }
+    if (!isValidPhone(phone)) { markField("phone", true); hasError = true; } else { markField("phone", false); }
+    if (!facebook) { markField("facebook", true); hasError = true; } else { markField("facebook", false); }
+    if (!lineId) { markField("lineId", true); hasError = true; } else { markField("lineId", false); }
+    if (!shirtSize) { markField("shirtSize", true); hasError = true; } else { markField("shirtSize", false); }
+
     if (hasError) {
       var firstErr = document.querySelector(".error-field");
       if (firstErr) firstErr.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
+
     el("step2").classList.remove("hidden");
     setProgress(2);
     scrollToId("step2");
   }
 
-  /* ============================================================
-     STEP 2 → 3
-  ============================================================ */
   function goStep3() {
     el("step3").classList.remove("hidden");
     setProgress(3);
@@ -469,9 +557,6 @@
     el("fileNamePill").textContent = file ? file.name : "ยังไม่ได้เลือกไฟล์";
   }
 
-  /* ============================================================
-     SUBMIT
-  ============================================================ */
   var _submitPending = false;
   var _fallbackTimer = null;
 
@@ -484,68 +569,122 @@
     var open = await checkRegistrationOpen();
     if (!open) return;
 
-    var btn = el("btnSubmit"); var msg = el("msg3");
-    msg.className = "msg"; msg.textContent = "";
+    var btn = el("btnSubmit");
+    var msg = el("msg3");
+    msg.className = "msg";
+    msg.textContent = "";
+
     var file = el("slip").files && el("slip").files[0];
-    if (!file) { msg.className = "msg error"; msg.textContent = "กรุณาแนบสลิปก่อนส่ง"; return; }
-    if (file.size > 5 * 1024 * 1024) { msg.className = "msg error"; msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่"; return; }
-    btn.disabled = true; btn.style.opacity = "0.65"; btn.textContent = "⏳ กำลังส่ง...";
-    msg.className = "msg warn"; msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารออีกสักครู่ อย่าปิดหน้านี้";
+
+    if (!file) {
+      msg.className = "msg error";
+      msg.textContent = "กรุณาแนบสลิปก่อนส่ง";
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      msg.className = "msg error";
+      msg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่";
+      return;
+    }
+
+    btn.disabled = true;
+    btn.style.opacity = "0.65";
+    btn.textContent = "⏳ กำลังส่ง...";
+    msg.className = "msg warn";
+    msg.textContent = "⏳ กำลังส่งข้อมูล... กรุณารออีกสักครู่ อย่าปิดหน้านี้";
+
     _submitPending = true;
+
     if (_fallbackTimer) clearTimeout(_fallbackTimer);
     _fallbackTimer = setTimeout(function() {
       if (_submitPending) {
         _submitPending = false;
         msg.className = "msg warn";
         msg.textContent = "⚠️ ส่งข้อมูลแล้ว แต่ยังไม่ได้รับการยืนยัน — กรุณาตรวจสอบสถานะด้านล่างหลังจากนี้ 2-3 นาที";
-        btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.textContent = "✉️ ส่งข้อมูล + สลิป";
         el("checkPhone").value = el("phone").value.trim();
         el("step4").classList.remove("hidden");
         scrollToId("step4");
       }
     }, 12000);
+
     var reader = new FileReader();
+
     reader.onload = function() {
       var base64 = String(reader.result).split(",")[1];
+
       var form = document.createElement("form");
-      form.method = "POST"; form.action = WEB_APP_URL; form.target = "hidden_iframe";
+      form.method = "POST";
+      form.action = WEB_APP_URL;
+      form.target = "hidden_iframe";
+
       var fields = {
-        token: TOKEN, fullname: el("fullname").value.trim(), phone: el("phone").value.trim(),
-        facebook: el("facebook").value.trim(), lineId: el("lineId").value.trim(),
-        deposit: 1000, fileName: file.name, mimeType: file.type || "application/octet-stream",
+        token: TOKEN,
+        fullname: el("fullname").value.trim(),
+        phone: el("phone").value.trim(),
+        facebook: el("facebook").value.trim(),
+        lineId: el("lineId").value.trim(),
+        shirt_size: el("shirtSize").value.trim(),
+        deposit: ACTIVE_DEPOSIT_AMOUNT,
+        course_price: ACTIVE_COURSE_PRICE,
+        fileName: file.name,
+        mimeType: file.type || "application/octet-stream",
         fileDataBase64: base64
       };
+
       for (var key in fields) {
         var inp = document.createElement("input");
-        inp.type = "hidden"; inp.name = key; inp.value = String(fields[key]);
+        inp.type = "hidden";
+        inp.name = key;
+        inp.value = String(fields[key]);
         form.appendChild(inp);
       }
-      document.body.appendChild(form); form.submit(); document.body.removeChild(form);
+
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
     };
+
     reader.onerror = function() {
-      if (_fallbackTimer) clearTimeout(_fallbackTimer); _submitPending = false;
-      msg.className = "msg error"; msg.textContent = "❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
-      btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
+      if (_fallbackTimer) clearTimeout(_fallbackTimer);
+      _submitPending = false;
+      msg.className = "msg error";
+      msg.textContent = "❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.textContent = "✉️ ส่งข้อมูล + สลิป";
     };
+
     reader.readAsDataURL(file);
   }
 
   function handleSubmitResult(d) {
-    var btn = el("btnSubmit"); var msg = el("msg3");
+    var btn = el("btnSubmit");
+    var msg = el("msg3");
+
     if (_fallbackTimer) clearTimeout(_fallbackTimer);
-    _submitPending = false; btn.disabled = false; btn.style.opacity = "1"; btn.textContent = "✉️ ส่งข้อมูล + สลิป";
+
+    _submitPending = false;
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.textContent = "✉️ ส่งข้อมูล + สลิป";
+
     if (d.ok) {
-      msg.className = "msg ok"; msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
+      msg.className = "msg ok";
+      msg.textContent = "✅ ส่งข้อมูลสำเร็จแล้ว! สถานะ: รอตรวจสอบ";
+
       el("checkPhone").value = el("phone").value.trim();
-      el("step4").classList.remove("hidden"); scrollToId("step4");
+      el("step4").classList.remove("hidden");
+      scrollToId("step4");
     } else {
-      msg.className = "msg error"; msg.textContent = "❌ ส่งไม่สำเร็จ: " + (d.error || "ไม่ทราบสาเหตุ") + " กรุณาลองอีกครั้ง";
+      msg.className = "msg error";
+      msg.textContent = "❌ ส่งไม่สำเร็จ: " + (d.error || "ไม่ทราบสาเหตุ") + " กรุณาลองอีกครั้ง";
     }
   }
 
-  /* ============================================================
-     STATUS CHECK
-  ============================================================ */
   function buildDirectStatusUrl(phone) {
     var base = WEB_APP_URL.replace(/\/exec$/, "/exec/status");
     return base + "?token=" + encodeURIComponent(TOKEN) + "&phone=" + encodeURIComponent(phone) + "&t=" + Date.now();
@@ -553,11 +692,13 @@
 
   function renderStatus(data) {
     var map = {
-      pending:  { t: "รอตรวจสอบ",   bg: "#FFF4CC", c: "#92400E", dot: "#F59E0B" },
+      pending:  { t: "รอตรวจสอบ", bg: "#FFF4CC", c: "#92400E", dot: "#F59E0B" },
       approved: { t: "อนุมัติแล้ว", bg: "#DCFCE7", c: "#166534", dot: "#22C55E" },
-      rejected: { t: "ไม่ผ่าน",     bg: "#FEE2E2", c: "#991B1B", dot: "#EF4444" }
+      rejected: { t: "ไม่ผ่าน", bg: "#FEE2E2", c: "#991B1B", dot: "#EF4444" }
     };
+
     var s = map[(data.status || "pending").toLowerCase()] || map.pending;
+
     el("statusInner").innerHTML =
       '<div class="status-top"><div class="status-title">ผลการตรวจสอบสถานะ</div>' +
       '<div class="status-badge" style="background:' + s.bg + ';color:' + s.c + '">' +
@@ -567,6 +708,7 @@
       '<div class="srow"><div class="k">เบอร์โทร</div><div class="v">' + escapeHtml(data.phone || "-") + '</div></div>' +
       '<div class="srow"><div class="k">เวลาลงทะเบียน</div><div class="v">' + escapeHtml(data.tsText || "-") + '</div></div>' +
       '</div><div class="hint">' + escapeHtml(data.hint || 'ถ้าสถานะยัง "รอตรวจสอบ" กรุณารอเจ้าหน้าที่ตรวจสอบ') + '</div>';
+
     el("statusBox").classList.remove("hidden");
   }
 
@@ -580,63 +722,108 @@
 
   function checkStatus() {
     var phone = (el("checkPhone").value || "").trim();
-    var msg = el("msg4"); var btn = el("btnCheck");
-    el("statusBox").classList.add("hidden"); msg.className = "msg"; msg.textContent = "";
-    if (!phone) { msg.className = "msg error"; msg.textContent = "กรุณาใส่เบอร์โทรเพื่อค้นหา"; return; }
-    if (!isValidPhone(phone)) { msg.className = "msg error"; msg.textContent = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0"; return; }
+    var msg = el("msg4");
+    var btn = el("btnCheck");
 
-    /* iOS และ Firefox: ใช้ fetch() ดึงข้อมูลแสดงในหน้าเดิม */
+    el("statusBox").classList.add("hidden");
+    msg.className = "msg";
+    msg.textContent = "";
+
+    if (!phone) {
+      msg.className = "msg error";
+      msg.textContent = "กรุณาใส่เบอร์โทรเพื่อค้นหา";
+      return;
+    }
+
+    if (!isValidPhone(phone)) {
+      msg.className = "msg error";
+      msg.textContent = "เบอร์โทรต้องเป็นตัวเลข 10 หลัก ขึ้นต้นด้วย 0";
+      return;
+    }
+
     if (isIOS() || isFirefox()) {
-      btn.disabled = true; btn.style.opacity = "0.65";
-      msg.className = "msg warn"; msg.textContent = "⏳ กำลังตรวจสอบ...";
+      btn.disabled = true;
+      btn.style.opacity = "0.65";
+      msg.className = "msg warn";
+      msg.textContent = "⏳ กำลังตรวจสอบ...";
+
       var fetchUrl = WEB_APP_URL.replace(/\/exec$/, "/exec/status_json")
         + "?token=" + encodeURIComponent(TOKEN)
         + "&phone=" + encodeURIComponent(phone)
         + "&t=" + Date.now();
+
       fetch(fetchUrl)
         .then(function(r) { return r.json(); })
         .then(function(payload) {
-          btn.disabled = false; btn.style.opacity = "1"; msg.textContent = "";
-          if (payload && payload.ok) { renderStatus(payload.data); }
-          else if (payload && payload.notFound) { renderNotFound(phone); }
-          else { msg.className = "msg error"; msg.textContent = "❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง"; }
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          msg.textContent = "";
+
+          if (payload && payload.ok) renderStatus(payload.data);
+          else if (payload && payload.notFound) renderNotFound(phone);
+          else {
+            msg.className = "msg error";
+            msg.textContent = "❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง";
+          }
+
           scrollToId("step4");
         })
         .catch(function() {
-          btn.disabled = false; btn.style.opacity = "1";
-          msg.className = "msg ok"; msg.textContent = "⏳ กำลังเปิดผลสถานะในแท็บใหม่...";
+          btn.disabled = false;
+          btn.style.opacity = "1";
+          msg.className = "msg ok";
+          msg.textContent = "⏳ กำลังเปิดผลสถานะในแท็บใหม่...";
           window.open(buildDirectStatusUrl(phone), "_blank");
         });
+
       return;
     }
 
-    /* Chrome/Edge/Samsung Browser: JSONP inline */
-    btn.disabled = true; btn.style.opacity = "0.65";
-    msg.className = "msg warn"; msg.textContent = "⏳ กำลังตรวจสอบ...";
+    btn.disabled = true;
+    btn.style.opacity = "0.65";
+    msg.className = "msg warn";
+    msg.textContent = "⏳ กำลังตรวจสอบ...";
+
     var cbName = "__cb_status_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+
     window[cbName] = function(payload) {
       try {
-        btn.disabled = false; btn.style.opacity = "1"; msg.textContent = "";
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        msg.textContent = "";
+
         if (payload && payload.ok) renderStatus(payload.data);
         else if (payload && payload.notFound) renderNotFound(phone);
-        else { msg.className = "msg error"; msg.textContent = "❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง"; }
+        else {
+          msg.className = "msg error";
+          msg.textContent = "❌ ตรวจสอบไม่สำเร็จ กรุณาลองอีกครั้ง";
+        }
+
         scrollToId("step4");
       } finally {
         try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
-        var tag = document.getElementById(cbName); if (tag) tag.remove();
+        var tag = document.getElementById(cbName);
+        if (tag) tag.remove();
       }
     };
+
     var base = WEB_APP_URL.replace(/\/exec$/, "/exec/status_json");
     var url = base + "?token=" + encodeURIComponent(TOKEN) + "&phone=" + encodeURIComponent(phone) + "&callback=" + encodeURIComponent(cbName) + "&t=" + Date.now();
-    var s = document.createElement("script"); s.src = url; s.id = cbName;
+
+    var s = document.createElement("script");
+    s.src = url;
+    s.id = cbName;
+
     s.onerror = function() {
-      btn.disabled = false; btn.style.opacity = "1";
-      msg.className = "msg error"; msg.textContent = "❌ โหลดข้อมูลสถานะไม่สำเร็จ กรุณาลองอีกครั้ง";
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      msg.className = "msg error";
+      msg.textContent = "❌ โหลดข้อมูลสถานะไม่สำเร็จ กรุณาลองอีกครั้ง";
       try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
     };
+
     document.body.appendChild(s);
   }
-
 
   function checkClosedStatus() {
     var phoneEl = document.getElementById("closedCheckPhone");
@@ -758,6 +945,7 @@
     var s = document.createElement("script");
     s.src = url;
     s.id = cbName;
+
     s.onerror = function() {
       if (msg) {
         msg.style.color = "#B00020";
@@ -765,20 +953,17 @@
       }
       try { delete window[cbName]; } catch(e) { window[cbName] = undefined; }
     };
+
     document.body.appendChild(s);
   }
 
-  /* ============================================================
-     ป้องกัน XSS
-  ============================================================ */
-  function escapeHtml(s) {
-    return String(s || "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+  async function init(){
+    renderActiveEventMoney();
+    await loadActiveEventInfo();
+    await checkRegistrationOpen();
   }
+
+  init();
 </script>
 
 </body>
