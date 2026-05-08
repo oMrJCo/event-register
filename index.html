@@ -50,8 +50,12 @@
     .field{margin:10px 0}
     label{display:block;font-size:12px;color:#374151;margin:0 0 6px;font-weight:800}
     .req{color:#B45309;font-weight:900}
-    input[type="text"],input[type="tel"],input:not([type]),select{width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:14px;font-size:15px;outline:none;background:#fff;transition:border .15s ease,box-shadow .15s ease}
-    input[type="text"]:focus,input[type="tel"]:focus,input:not([type]):focus,select:focus{border-color:rgba(234,179,8,.55);box-shadow:0 0 0 4px rgba(247,201,72,.25)}
+    input[type="text"],input[type="tel"],input:not([type]),select{
+      width:100%;padding:12px 12px;border:1px solid var(--border);border-radius:14px;font-size:15px;outline:none;background:#fff;transition:border .15s ease,box-shadow .15s ease
+    }
+    input[type="text"]:focus,input[type="tel"]:focus,input:not([type]):focus,select:focus{
+      border-color:rgba(234,179,8,.55);box-shadow:0 0 0 4px rgba(247,201,72,.25)
+    }
     input.error-field,select.error-field{border-color:#EF4444 !important;box-shadow:0 0 0 4px rgba(239,68,68,.15) !important}
     .help{margin-top:6px;font-size:12px;color:var(--muted)}
     .field-error{margin-top:5px;font-size:12px;color:#B00020;font-weight:800;display:none}
@@ -122,7 +126,7 @@
         <div class="p-line" id="pl1"></div>
         <div class="p-step">
           <div class="p-dot" id="pd2">2</div>
-          <div class="p-text" id="pt2">โอนมัดจำ</div>
+          <div class="p-text" id="pt2">ชำระเงิน</div>
         </div>
         <div class="p-line" id="pl2"></div>
         <div class="p-step">
@@ -139,20 +143,20 @@
 
     <div class="hero">
       <h1 id="heroTitle">ลงทะเบียนเพื่อบันทึกรายชื่อ</h1>
-      <p id="heroSub">กรอกข้อมูลให้ครบ → โอนมัดจำ → แนบสลิป → ส่ง ระบบจะบันทึกให้อัตโนมัติ</p>
+      <p id="heroSub">กรอกข้อมูลให้ครบ → ชำระเงินตามประเภทงาน → แนบสลิป → ส่ง ระบบจะบันทึกให้อัตโนมัติ</p>
 
       <div class="money-info">
         <div class="money-card">
-          <small>ค่าลงทะเบียน</small>
-          <b id="coursePriceText">฿1,900</b>
+          <small>ค่าคอร์ส</small>
+          <b id="coursePriceText">-</b>
         </div>
         <div class="money-card">
           <small>มัดจำ</small>
-          <b id="depositAmountText">฿1,000</b>
+          <b id="depositAmountText">-</b>
         </div>
         <div class="money-card">
-          <small>คงเหลือ</small>
-          <b id="balanceText">฿900</b>
+          <small>ยอดที่ต้องโอน</small>
+          <b id="payNowText">-</b>
         </div>
       </div>
     </div>
@@ -220,8 +224,8 @@
       <section class="card hidden" id="step2">
         <div class="card-head">
           <div>
-            <h3 class="card-title" id="step2Title">2) โอนมัดจำ ฿1,000</h3>
-            <p class="card-sub">สแกน QR เพื่อโอนเงิน แล้วกดไปแนบสลิป</p>
+            <h3 class="card-title" id="step2Title">2) ชำระเงิน</h3>
+            <p class="card-sub" id="step2Sub">สแกน QR เพื่อโอนเงิน แล้วกดไปแนบสลิป</p>
           </div>
           <div class="step">STEP 2/3</div>
         </div>
@@ -229,7 +233,7 @@
           <div class="qr-wrap">
             <img class="qr-img" src="qr-card.png" alt="QR Code สำหรับโอนเงิน" />
           </div>
-          <div class="notice" id="depositNotice">✅ โอนมัดจำแล้ว กด "ไปแนบสลิป" เพื่อยืนยันสิทธิ์</div>
+          <div class="notice" id="depositNotice">✅ โอนแล้ว กด "ไปแนบสลิป" เพื่อยืนยันสิทธิ์</div>
           <div class="btnrow">
             <button class="btn-primary" type="button" onclick="goStep3()">ไปแนบสลิป →</button>
             <button class="btn-ghost" type="button" onclick="scrollToId('step1')">← กลับไปแก้ข้อมูล</button>
@@ -297,7 +301,7 @@
   var TOKEN = "SPX_EVENT_1000_2026_SECURE_9x7KpL2mQ8vR";
 
   var ACTIVE_EVENT = null;
-  var ACTIVE_COURSE_PRICE = 1900;
+  var ACTIVE_COURSE_PRICE = 0;
   var ACTIVE_DEPOSIT_AMOUNT = 1000;
 
   function el(id) { return document.getElementById(id); }
@@ -318,14 +322,23 @@
 
   function moneyText(v){
     var n = moneyNumber(v);
-    if (!n) return "-";
+    if (!n) return "฿0";
     return "฿" + n.toLocaleString("th-TH");
+  }
+
+  function isPaidCourse(){
+    return moneyNumber(ACTIVE_COURSE_PRICE) > 0;
+  }
+
+  function getPayNowAmount(){
+    return isPaidCourse() ? moneyNumber(ACTIVE_COURSE_PRICE) : moneyNumber(ACTIVE_DEPOSIT_AMOUNT);
   }
 
   async function apiGet(params){
     var url = WEB_APP_URL + "?" + new URLSearchParams(Object.assign({}, params, { t: Date.now() })).toString();
     var res = await fetch(url);
     var text = await res.text();
+
     try {
       return JSON.parse(text);
     } catch(err) {
@@ -339,22 +352,46 @@
       event_id: ev.event_id || "",
       event_name: ev.event_name || "",
       event_date: ev.event_date || "",
-      course_price: ev.course_price || ev.coursePrice || ev.price || ev.course_fee || "",
-      deposit_amount: ev.deposit_amount || ev.depositAmount || ev.deposit || ""
+      course_price: ev.course_price || ev.coursePrice || ev.price || ev.course_fee || "0",
+      deposit_amount: ev.deposit_amount || ev.depositAmount || ev.deposit || "0"
     };
   }
 
   function renderActiveEventMoney(){
     var course = moneyNumber(ACTIVE_COURSE_PRICE);
     var deposit = moneyNumber(ACTIVE_DEPOSIT_AMOUNT);
-    var balance = Math.max(0, course - deposit);
+    var paid = course > 0;
+    var payNow = paid ? course : deposit;
 
-    if (el("coursePriceText")) el("coursePriceText").textContent = moneyText(course);
-    if (el("depositAmountText")) el("depositAmountText").textContent = moneyText(deposit);
-    if (el("balanceText")) el("balanceText").textContent = course ? moneyText(balance) : "-";
+    if (el("coursePriceText")) {
+      el("coursePriceText").textContent = paid ? moneyText(course) : "ฟรี";
+    }
 
-    if (el("step2Title")) el("step2Title").textContent = "2) โอนมัดจำ " + moneyText(deposit);
-    if (el("depositNotice")) el("depositNotice").textContent = "✅ โอนมัดจำ " + moneyText(deposit) + " แล้ว กด \"ไปแนบสลิป\" เพื่อยืนยันสิทธิ์";
+    if (el("depositAmountText")) {
+      el("depositAmountText").textContent = paid ? "ไม่เก็บมัดจำ" : moneyText(deposit);
+    }
+
+    if (el("payNowText")) {
+      el("payNowText").textContent = moneyText(payNow);
+    }
+
+    if (el("step2Title")) {
+      el("step2Title").textContent = paid
+        ? "2) ชำระค่าคอร์ส " + moneyText(payNow)
+        : "2) โอนมัดจำ " + moneyText(payNow);
+    }
+
+    if (el("step2Sub")) {
+      el("step2Sub").textContent = paid
+        ? "สแกน QR เพื่อชำระค่าคอร์ส แล้วกดไปแนบสลิป"
+        : "สแกน QR เพื่อโอนมัดจำ แล้วกดไปแนบสลิป";
+    }
+
+    if (el("depositNotice")) {
+      el("depositNotice").textContent = paid
+        ? "✅ ชำระค่าคอร์ส " + moneyText(payNow) + " แล้ว กด \"ไปแนบสลิป\" เพื่อยืนยันสิทธิ์"
+        : "✅ โอนมัดจำ " + moneyText(payNow) + " แล้ว กด \"ไปแนบสลิป\" เพื่อยืนยันสิทธิ์ เงินมัดจำจะคืนหน้างาน";
+    }
 
     if (ACTIVE_EVENT && ACTIVE_EVENT.event_name) {
       if (el("eventBadge")) el("eventBadge").textContent = ACTIVE_EVENT.event_name;
@@ -365,21 +402,23 @@
   async function loadActiveEventInfo(){
     try {
       var data = await apiGet({ action:"event_list" });
-      if (!data || !data.ok) return;
+      if (!data || !data.ok) {
+        renderActiveEventMoney();
+        return;
+      }
 
       var events = (data.events || []).map(normalizeEvent);
       var activeId = data.active_event_id || "";
       var active = events.find(function(e){ return e.event_id === activeId; }) || events[0] || null;
 
-      if (!active) return;
+      if (!active) {
+        renderActiveEventMoney();
+        return;
+      }
 
       ACTIVE_EVENT = active;
-
-      var course = moneyNumber(active.course_price);
-      var deposit = moneyNumber(active.deposit_amount);
-
-      if (course) ACTIVE_COURSE_PRICE = course;
-      if (deposit) ACTIVE_DEPOSIT_AMOUNT = deposit;
+      ACTIVE_COURSE_PRICE = moneyNumber(active.course_price);
+      ACTIVE_DEPOSIT_AMOUNT = moneyNumber(active.deposit_amount);
 
       renderActiveEventMoney();
     } catch(err) {
@@ -459,9 +498,10 @@
   function setProgress(step) {
     var labels = {
       1: "ขั้นตอนที่ 1 จาก 3 — กรอกข้อมูล",
-      2: "ขั้นตอนที่ 2 จาก 3 — โอนมัดจำ",
+      2: "ขั้นตอนที่ 2 จาก 3 — ชำระเงิน",
       3: "ขั้นตอนที่ 3 จาก 3 — แนบสลิป"
     };
+
     var labelEl = el("progressLabel");
     if (labelEl) labelEl.textContent = labels[step] || labels[1];
 
@@ -469,6 +509,7 @@
       var dot = el("pd" + i);
       var txt = el("pt" + i);
       if (!dot || !txt) continue;
+
       dot.classList.remove("active", "done");
       txt.classList.remove("active", "done");
 
@@ -501,10 +542,12 @@
   function markField(fieldId, isError) {
     var inputEl = el(fieldId);
     var errEl = el("err-" + fieldId);
+
     if (inputEl) {
       if (isError) inputEl.classList.add("error-field");
       else inputEl.classList.remove("error-field");
     }
+
     if (errEl) {
       if (isError) errEl.classList.add("show");
       else errEl.classList.remove("show");
@@ -588,6 +631,9 @@
       return;
     }
 
+    var payNow = getPayNowAmount();
+    var paid = isPaidCourse();
+
     btn.disabled = true;
     btn.style.opacity = "0.65";
     btn.textContent = "⏳ กำลังส่ง...";
@@ -628,8 +674,15 @@
         facebook: el("facebook").value.trim(),
         lineId: el("lineId").value.trim(),
         shirt_size: el("shirtSize").value.trim(),
-        deposit: ACTIVE_DEPOSIT_AMOUNT,
+
+        // สำคัญ:
+        // paid course = deposit column จะลงค่าคอร์ส เช่น 1900 เพื่อ staff ไม่ต้องคืนเงิน
+        // free course = deposit column จะลงมัดจำ เช่น 1000 เพื่อคืนเงินหน้างาน
+        deposit: payNow,
         course_price: ACTIVE_COURSE_PRICE,
+        deposit_amount: ACTIVE_DEPOSIT_AMOUNT,
+        payment_type: paid ? "COURSE_FEE" : "DEPOSIT_REFUNDABLE",
+
         fileName: file.name,
         mimeType: file.type || "application/octet-stream",
         fileDataBase64: base64
