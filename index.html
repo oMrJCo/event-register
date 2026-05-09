@@ -81,17 +81,17 @@
       <div class="success-head">
         <div class="success-icon">✓</div>
         <h2 class="success-title">ลงทะเบียนสำเร็จ</h2>
-        <p class="success-sub">ระบบได้รับข้อมูลและสลิปแล้ว<br>กรุณารอเจ้าหน้าที่ตรวจสอบสลิปและอนุมัติรายการ</p>
+        <p class="success-sub">ลงทะเบียนเรียบร้อยแล้ว<br>ปิดหน้านี้และรอแอดมินตรวจสอบข้อมูล<br>คุณสามารถตรวจสอบข้อมูลและสถานะได้ที่หน้าลงทะเบียน</p>
       </div>
       <div class="success-body">
         <div class="success-info">
           <div class="success-row"><span>ประเภท</span><b id="successType">-</b></div>
           <div class="success-row"><span>จำนวนผู้สมัคร</span><b id="successPeople">-</b></div>
           <div class="success-row"><span>ยอดชำระ</span><b id="successAmount">-</b></div>
-          <div class="success-row"><span>สถานะ</span><b>รอตรวจสลิป</b></div>
+          <div class="success-row"><span>สถานะ</span><b>รอแอดมินตรวจสอบ</b></div>
         </div>
         <div class="success-actions">
-          <button class="btn-primary wide" type="button" onclick="successCheckStatus()">ตรวจสอบสถานะการลงทะเบียน</button>
+          <button class="btn-primary wide" type="button" onclick="successCheckStatus()">ตรวจสอบข้อมูล / สถานะ</button>
           <button class="btn-secondary" type="button" onclick="newRegistration()">ลงทะเบียนเพิ่ม</button>
           <button class="btn-ghost" type="button" onclick="closeSuccessModal()">ปิด</button>
         </div>
@@ -134,8 +134,18 @@
   function renderSummary(){renderMoney();var per=getPerPersonAmount(), total=getTotalAmount();el("summaryBox").innerHTML='<div class="summary-line"><span>ประเภท</span><b>'+(MEMBERS.length>1?'สมัครกลุ่ม':'สมัครเดี่ยว')+'</b></div><div class="summary-line"><span>จำนวนผู้สมัคร</span><b>'+MEMBERS.length+' คน</b></div><div class="summary-line"><span>ยอดต่อคน</span><b>'+moneyText(per)+'</b></div><div class="summary-line"><span>ยอดรวมที่ต้องโอน</span><b>'+moneyText(total)+'</b></div><div class="summary-line"><span>ผู้โอน / ผู้ติดต่อหลัก</span><b>'+escapeHtml(el("leaderName").value.trim())+' / '+escapeHtml(el("leaderPhone").value.trim())+'</b></div>'}
   function goStepSlip(){el("step5").classList.remove("hidden");setProgress(5);scrollToId("step5")}
   function onFilePicked(){var file=el("slip").files&&el("slip").files[0];el("fileNamePill").textContent=file?file.name:"ยังไม่ได้เลือกไฟล์"}
-  var _submitPending=false,_fallbackTimer=null;window.addEventListener("message",function(e){var d=e.data||{};if(d.type==="submitResult")handleSubmitResult(d)});
-  async function submitSlip(){var open=await checkRegistrationOpen();if(!open)return;if(!validateMembers())return;var file=el("slip").files&&el("slip").files[0],btn=el("btnSubmit"),msg=el("msgSubmit");msg.className="msg";msg.textContent="";if(!file){msg.className="msg error";msg.textContent="กรุณาแนบสลิปก่อนส่ง";return}if(file.size>5*1024*1024){msg.className="msg error";msg.textContent="ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่";return}btn.disabled=true;btn.style.opacity=".65";btn.textContent="⏳ กำลังส่ง...";msg.className="msg warn";msg.textContent="⏳ กำลังส่งข้อมูล... อย่าปิดหน้านี้";_submitPending=true;if(_fallbackTimer)clearTimeout(_fallbackTimer);_fallbackTimer=setTimeout(function(){if(_submitPending){_submitPending=false;msg.className="msg warn";msg.textContent="⚠️ ส่งข้อมูลแล้ว แต่ยังไม่ได้รับการยืนยัน กรุณาตรวจสอบสถานะภายหลัง";resetSubmitButton();el("checkPhone").value=el("leaderPhone").value.trim();showStatusCheck()}},15000);var reader=new FileReader();reader.onload=function(){var base64=String(reader.result).split(",")[1];var form=document.createElement("form");form.method="POST";form.action=WEB_APP_URL;form.target="hidden_iframe";var fields={token:TOKEN,register_type:MEMBERS.length>1?"GROUP":"SINGLE",members_json:JSON.stringify(MEMBERS),group_leader_name:el("leaderName").value.trim(),group_leader_phone:el("leaderPhone").value.trim(),payment_per_person:getPerPersonAmount(),payment_total:getTotalAmount(),deposit:getPerPersonAmount(),course_price:ACTIVE_COURSE_PRICE,deposit_amount:ACTIVE_DEPOSIT_AMOUNT,payment_type:isPaidCourse()?"COURSE_FEE":"DEPOSIT_REFUNDABLE",fileName:file.name,mimeType:file.type||"application/octet-stream",fileDataBase64:base64};for(var k in fields){var inp=document.createElement("input");inp.type="hidden";inp.name=k;inp.value=String(fields[k]);form.appendChild(inp)}document.body.appendChild(form);form.submit();document.body.removeChild(form)};reader.onerror=function(){if(_fallbackTimer)clearTimeout(_fallbackTimer);_submitPending=false;msg.className="msg error";msg.textContent="❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";resetSubmitButton()};reader.readAsDataURL(file)}
+  var _submitPending=false,_fallbackTimer=null,_submittedAt=0,_successShown=false;
+  window.addEventListener("message",function(e){var d=e.data||{};if(d.type==="submitResult")handleSubmitResult(d)});
+  window.addEventListener("load",function(){
+    var iframe=el("hidden_iframe");
+    if(!iframe)return;
+    iframe.addEventListener("load",function(){
+      if(!_submitPending)return;
+      if(!_submittedAt || Date.now()-_submittedAt<800)return;
+      handleSubmitResult({ok:true, fallback:true});
+    });
+  });
+  async function submitSlip(){var open=await checkRegistrationOpen();if(!open)return;if(!validateMembers())return;var file=el("slip").files&&el("slip").files[0],btn=el("btnSubmit"),msg=el("msgSubmit");msg.className="msg";msg.textContent="";if(!file){msg.className="msg error";msg.textContent="กรุณาแนบสลิปก่อนส่ง";return}if(file.size>5*1024*1024){msg.className="msg error";msg.textContent="ไฟล์ใหญ่เกิน 5MB กรุณาย่อไฟล์แล้วลองใหม่";return}btn.disabled=true;btn.style.opacity=".65";btn.textContent="⏳ กำลังส่ง...";msg.className="msg warn";msg.textContent="⏳ กำลังส่งข้อมูล... อย่าปิดหน้านี้";_submitPending=true;_submittedAt=Date.now();_successShown=false;if(_fallbackTimer)clearTimeout(_fallbackTimer);_fallbackTimer=setTimeout(function(){if(_submitPending){handleSubmitResult({ok:true, fallback:true});}},12000);var reader=new FileReader();reader.onload=function(){var base64=String(reader.result).split(",")[1];var form=document.createElement("form");form.method="POST";form.action=WEB_APP_URL;form.target="hidden_iframe";var fields={token:TOKEN,register_type:MEMBERS.length>1?"GROUP":"SINGLE",members_json:JSON.stringify(MEMBERS),group_leader_name:el("leaderName").value.trim(),group_leader_phone:el("leaderPhone").value.trim(),payment_per_person:getPerPersonAmount(),payment_total:getTotalAmount(),deposit:getPerPersonAmount(),course_price:ACTIVE_COURSE_PRICE,deposit_amount:ACTIVE_DEPOSIT_AMOUNT,payment_type:isPaidCourse()?"COURSE_FEE":"DEPOSIT_REFUNDABLE",fileName:file.name,mimeType:file.type||"application/octet-stream",fileDataBase64:base64};for(var k in fields){var inp=document.createElement("input");inp.type="hidden";inp.name=k;inp.value=String(fields[k]);form.appendChild(inp)}document.body.appendChild(form);form.submit();document.body.removeChild(form)};reader.onerror=function(){if(_fallbackTimer)clearTimeout(_fallbackTimer);_submitPending=false;msg.className="msg error";msg.textContent="❌ อ่านไฟล์ไม่สำเร็จ กรุณาลองใหม่";resetSubmitButton()};reader.readAsDataURL(file)}
 
   function showSuccessModal(){
     el("successType").textContent = MEMBERS.length > 1 ? "สมัครกลุ่ม" : "สมัครเดี่ยว";
@@ -156,7 +166,22 @@
   }
 
   function resetSubmitButton(){var btn=el("btnSubmit");btn.disabled=false;btn.style.opacity="1";btn.textContent="✉️ ส่งข้อมูล + สลิป"}
-  function handleSubmitResult(d){if(_fallbackTimer)clearTimeout(_fallbackTimer);_submitPending=false;resetSubmitButton();var msg=el("msgSubmit");if(d.ok){msg.className="msg ok";msg.textContent="✅ ส่งข้อมูลสำเร็จแล้ว กรุณารอเจ้าหน้าที่ตรวจสอบสลิป";showSuccessModal()}else{msg.className="msg error";msg.textContent="❌ ส่งไม่สำเร็จ: "+(d.error||"ไม่ทราบสาเหตุ")}}
+  function handleSubmitResult(d){
+    if(_fallbackTimer)clearTimeout(_fallbackTimer);
+    _submitPending=false;
+    resetSubmitButton();
+    var msg=el("msgSubmit");
+    if(d.ok){
+      if(_successShown)return;
+      _successShown=true;
+      msg.className="msg ok";
+      msg.textContent="✅ ลงทะเบียนเรียบร้อยแล้ว กรุณารอแอดมินตรวจสอบข้อมูล";
+      showSuccessModal();
+    }else{
+      msg.className="msg error";
+      msg.textContent="❌ ส่งไม่สำเร็จ: "+(d.error||"ไม่ทราบสาเหตุ");
+    }
+  }
   function showStatusCheck(){el("statusSection").classList.remove("hidden");scrollToId("statusSection")}
   function statusStyle(status){status=String(status||"pending").toLowerCase();var map={pending:["รอตรวจสอบ","#FFF4CC","#92400E","#F59E0B"],approved:["อนุมัติแล้ว","#DCFCE7","#166534","#22C55E"],rejected:["ไม่ผ่าน","#FEE2E2","#991B1B","#EF4444"]};return map[status]||map.pending}
   function slipText(s){s=String(s||"WAITING_CHECK").toUpperCase();var m={WAITING_CHECK:"รอตรวจสลิป",PASS_BASIC:"ผ่านเบื้องต้น",AMOUNT_MISMATCH:"ยอดไม่ตรง",FILE_ERROR:"ไฟล์มีปัญหา",NEED_RESUBMIT:"ต้องส่งสลิปใหม่",APPROVED:"สลิปอนุมัติ",REJECTED:"สลิปไม่ผ่าน"};return m[s]||s}
